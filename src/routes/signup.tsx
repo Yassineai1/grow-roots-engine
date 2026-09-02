@@ -3,9 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search['redirect'] === "string" ? (search['redirect'] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
+    typeof search['redirect'] === "string" ? { redirect: search['redirect'] as string } : {},
   head: () => ({
     meta: [
       { title: "Sign up | Fitly Business Platform" },
