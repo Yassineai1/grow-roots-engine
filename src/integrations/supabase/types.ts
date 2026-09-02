@@ -372,6 +372,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_available_slots: {
         Args: { _date: string; _service_id: string }
         Returns: {
@@ -379,6 +387,33 @@ export type Database = {
           staff_id: string
           staff_name: string
           start_time: string
+        }[]
+      }
+      get_business_bookings: {
+        Args: { _business_id: string }
+        Returns: {
+          booking_date: string
+          client_email: string
+          client_name: string
+          end_time: string
+          id: string
+          notes: string
+          service_name: string
+          staff_name: string
+          start_time: string
+          status: string
+        }[]
+      }
+      get_business_staff: {
+        Args: { _business_id: string }
+        Returns: {
+          bio: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          specialties: string[]
+          user_id: string
         }[]
       }
       get_public_business: {
