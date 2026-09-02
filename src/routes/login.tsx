@@ -78,7 +78,7 @@ function LoginPage() {
         </form>
         <p className="mt-4 text-sm text-muted-foreground">
           No account?{" "}
-          <Link to="/signup" search={{ redirect }} className="text-foreground underline">
+          <Link to="/signup" search={redirect ? { redirect } : {}} className="text-foreground underline">
             Sign up
           </Link>
         </p>
