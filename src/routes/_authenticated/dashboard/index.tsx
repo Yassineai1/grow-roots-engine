@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DashboardNav } from "@/components/DashboardNav";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   head: () => ({
@@ -29,7 +30,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("businesses")
-        .select("id, name")
+        .select("id, name, slug")
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -50,11 +51,20 @@ function DashboardPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm text-center">
+    <main className="mx-auto max-w-4xl px-4 py-8">
+      <DashboardNav />
+      <div className="mt-6">
         <h1 className="text-2xl font-semibold text-foreground">
           {isLoading ? "Loading..." : `Welcome, ${business?.name ?? ""}`}
         </h1>
+        {business?.slug && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Public booking page:{" "}
+            <a href={`/book/${business.slug}`} className="underline">
+              /book/{business.slug}
+            </a>
+          </p>
+        )}
         <button
           onClick={handleSignOut}
           className="mt-6 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
