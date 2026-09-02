@@ -14,9 +14,11 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as BookSlugRouteImport } from './routes/book/$slug'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_authenticated/dashboard/bookings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
+import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard/staff'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,6 +44,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/dashboard/',
@@ -60,14 +67,22 @@ const AuthenticatedDashboardServicesRoute =
     path: '/dashboard/services',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDashboardStaffRoute =
+  AuthenticatedDashboardStaffRouteImport.update({
+    id: '/dashboard/staff',
+    path: '/dashboard/staff',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/book/$slug': typeof BookSlugRoute
   '/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -75,8 +90,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/book/$slug': typeof BookSlugRoute
   '/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -86,8 +103,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/book/$slug': typeof BookSlugRoute
   '/_authenticated/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -97,8 +116,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/onboarding'
+    | '/book/$slug'
     | '/dashboard/bookings'
     | '/dashboard/services'
+    | '/dashboard/staff'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -106,8 +127,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/onboarding'
+    | '/book/$slug'
     | '/dashboard/bookings'
     | '/dashboard/services'
+    | '/dashboard/staff'
     | '/dashboard'
   id:
     | '__root__'
@@ -116,8 +139,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_authenticated/onboarding'
+    | '/book/$slug'
     | '/_authenticated/dashboard/bookings'
     | '/_authenticated/dashboard/services'
+    | '/_authenticated/dashboard/staff'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -126,6 +151,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  BookSlugRoute: typeof BookSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard/': {
       id: '/_authenticated/dashboard/'
       path: '/dashboard'
@@ -186,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard/staff': {
+      id: '/_authenticated/dashboard/staff'
+      path: '/dashboard/staff'
+      fullPath: '/dashboard/staff'
+      preLoaderRoute: typeof AuthenticatedDashboardStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -193,6 +233,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedDashboardBookingsRoute: typeof AuthenticatedDashboardBookingsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
+  AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -200,6 +241,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedDashboardBookingsRoute: AuthenticatedDashboardBookingsRoute,
   AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
+  AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
 }
 
@@ -211,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  BookSlugRoute: BookSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
