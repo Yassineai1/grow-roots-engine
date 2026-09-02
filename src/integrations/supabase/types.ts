@@ -14,6 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          staff_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          staff_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          staff_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          booking_date: string
+          business_id: string
+          client_id: string
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          service_id: string
+          staff_id: string
+          start_time: string
+          status: string
+        }
+        Insert: {
+          booking_date: string
+          business_id: string
+          client_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          service_id: string
+          staff_id: string
+          start_time: string
+          status?: string
+        }
+        Update: {
+          booking_date?: string
+          business_id?: string
+          client_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          service_id?: string
+          staff_id?: string
+          start_time?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           brand_color: string | null
@@ -103,6 +209,53 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          business_id: string
+          capacity: number
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          service_type: string
+        }
+        Insert: {
+          business_id: string
+          capacity?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          service_type: string
+        }
+        Update: {
+          business_id?: string
+          capacity?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff: {
         Row: {
           bio: string | null
@@ -148,6 +301,42 @@ export type Database = {
           },
         ]
       }
+      staff_services: {
+        Row: {
+          created_at: string
+          id: string
+          service_id: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          service_id: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          service_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_services_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -183,7 +372,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_available_slots: {
+        Args: { _date: string; _service_id: string }
+        Returns: {
+          end_time: string
+          staff_id: string
+          staff_name: string
+          start_time: string
+        }[]
+      }
+      get_public_business: {
+        Args: { _slug: string }
+        Returns: {
+          brand_color: string
+          business_type: string
+          id: string
+          logo_url: string
+          name: string
+          slug: string
+        }[]
+      }
+      get_public_services: {
+        Args: { _business_id: string }
+        Returns: {
+          capacity: number
+          description: string
+          duration_minutes: number
+          id: string
+          name: string
+          price: number
+          service_type: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
