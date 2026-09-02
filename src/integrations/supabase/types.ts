@@ -375,7 +375,6 @@ export type Database = {
       find_user_by_email: {
         Args: { _email: string }
         Returns: {
-          email: string
           full_name: string
           id: string
         }[]
