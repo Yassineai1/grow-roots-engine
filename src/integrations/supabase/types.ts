@@ -14,13 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      businesses: {
+        Row: {
+          brand_color: string | null
+          business_type: string
+          created_at: string
+          id: string
+          language_default: string
+          logo_url: string | null
+          name: string
+          owner_id: string
+          settings: Json
+          slug: string
+          subscription_status: string
+        }
+        Insert: {
+          brand_color?: string | null
+          business_type: string
+          created_at?: string
+          id?: string
+          language_default?: string
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          settings?: Json
+          slug: string
+          subscription_status?: string
+        }
+        Update: {
+          brand_color?: string | null
+          business_type?: string
+          created_at?: string
+          id?: string
+          language_default?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          settings?: Json
+          slug?: string
+          subscription_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "businesses_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff: {
+        Row: {
+          bio: string | null
+          business_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          specialties: string[] | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          business_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          specialties?: string[] | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          specialties?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          preferred_language: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string
+          id: string
+          phone?: string | null
+          preferred_language?: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          preferred_language?: string
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_platform_admin: { Args: never; Returns: boolean }
+      owns_business: { Args: { _business_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
