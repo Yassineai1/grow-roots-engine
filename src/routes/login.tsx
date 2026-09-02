@@ -3,6 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
+    typeof search['redirect'] === "string" ? { redirect: search['redirect'] as string } : {},
   head: () => ({
     meta: [
       { title: "Log in | Fitly Business Platform" },
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,10 @@ function LoginPage() {
     setLoading(false);
     if (signInError) {
       setError(signInError.message);
+      return;
+    }
+    if (redirect && redirect.startsWith("/")) {
+      window.location.assign(redirect);
       return;
     }
     navigate({ to: "/dashboard" });
@@ -71,7 +78,7 @@ function LoginPage() {
         </form>
         <p className="mt-4 text-sm text-muted-foreground">
           No account?{" "}
-          <Link to="/signup" className="text-foreground underline">
+          <Link to="/signup" search={redirect ? { redirect } : {}} className="text-foreground underline">
             Sign up
           </Link>
         </p>
