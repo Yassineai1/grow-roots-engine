@@ -126,7 +126,7 @@ function SettingsPage() {
             <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">Your public booking link</h2>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <code className="flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 text-sm text-foreground">
+                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground">
                   {bookingUrl || "..."}
                 </code>
                 <button
@@ -155,7 +155,7 @@ function SettingsPage() {
                 <img
                   src={qr}
                   alt={`QR code linking to ${bookingUrl}`}
-                  className="mt-4 h-48 w-48 rounded-md border border-border bg-background"
+                  className="mt-4 h-48 w-48 rounded-lg border border-border bg-foreground p-2"
                 />
               ) : (
                 <p className="mt-4 text-sm text-muted-foreground">Generating QR code...</p>

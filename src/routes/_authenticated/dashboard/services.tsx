@@ -127,7 +127,7 @@ function ServicesPage() {
       <DashboardNav />
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Services</h1>
 
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 rounded-md border border-border p-4 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="ui-card mt-4 grid gap-3 p-5 sm:grid-cols-2">
         <input
           required
           className={input}
@@ -207,7 +207,7 @@ function ServicesPage() {
 
       <div className="mt-6 space-y-2">
         {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {services?.length === 0 && <p className="text-sm text-muted-foreground">No services yet.</p>}
+        {services?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No services yet. Create your first service above.</p>}
         {services?.map((s) => (
           <div
             key={s.id}

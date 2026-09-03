@@ -102,7 +102,7 @@ function StaffPage() {
           e.preventDefault();
           linkStaff.mutate(email);
         }}
-        className="mt-4 flex flex-wrap gap-2 rounded-md border border-border p-4"
+        className="ui-card mt-4 flex flex-wrap gap-2 p-5"
       >
         <input
           required
@@ -124,7 +124,7 @@ function StaffPage() {
 
       <div className="mt-6 space-y-3">
         {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {staff?.length === 0 && <p className="text-sm text-muted-foreground">No staff yet.</p>}
+        {staff?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No staff yet. Add your first team member above.</p>}
         {staff?.map((s) => (
           <div key={s.id} className="ui-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">

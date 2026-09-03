@@ -187,7 +187,7 @@ function BookPage() {
       )}
 
       {confirmation ? (
-        <div className="mt-6 rounded-md border border-border p-4">
+        <div className="ui-card mt-6 p-5">
           <h2 className="text-lg font-medium text-foreground">Booking requested</h2>
           <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
             <li>Business: {business?.name}</li>
@@ -199,7 +199,7 @@ function BookPage() {
           </ul>
           <button
             onClick={() => setConfirmation(null)}
-            className="mt-4 rounded-md border border-input px-3 py-1.5 text-sm"
+            className="ui-btn-secondary mt-4"
           >
             Book another
           </button>
@@ -209,14 +209,16 @@ function BookPage() {
           <h2 className="mt-6 text-lg font-medium text-foreground">Services</h2>
           <div className="mt-2 space-y-2">
             {services?.length === 0 && (
-              <p className="text-sm text-muted-foreground">No services available yet.</p>
+              <p className="ui-card w-full p-6 text-center text-sm text-muted-foreground">No services available yet.</p>
             )}
             {services?.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setServiceId(s.id)}
-                className={`block w-full rounded-md border p-3 text-left text-sm ${
-                  serviceId === s.id ? "border-primary" : "border-border"
+                className={`ui-card block w-full p-4 text-left text-sm transition-colors ${
+                  serviceId === s.id
+                    ? "border-primary ring-1 ring-primary/40"
+                    : "hover:bg-accent"
                 }`}
               >
                 <span className="font-medium text-foreground">{s.name}</span>
@@ -249,7 +251,7 @@ function BookPage() {
               {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
               <div className="mt-3 flex flex-wrap gap-2">
                 {slots?.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No available slots on this day.</p>
+                  <p className="ui-card w-full p-6 text-center text-sm text-muted-foreground">No available slots on this day.</p>
                 )}
                 {slots?.map((slot) => (
                   <button
