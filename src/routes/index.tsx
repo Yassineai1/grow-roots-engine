@@ -99,7 +99,7 @@ function ClientHome() {
         )}
         <ul className="space-y-2">
           {results?.map((b) => (
-            <li key={b.id}>
+            <li key={b.slug}>
               <a
                 href={`/book/${b.slug}`}
                 className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
