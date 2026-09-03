@@ -33,18 +33,29 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (signInError) {
+      setLoading(false);
       setError(signInError.message);
       return;
     }
     if (redirect && redirect.startsWith("/")) {
+      setLoading(false);
       window.location.assign(redirect);
       return;
     }
-    navigate({ to: "/dashboard" });
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    setLoading(false);
+    navigate({ to: (profile?.role ?? "business_owner") === "client" ? "/" : "/dashboard" });
   }
+
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
