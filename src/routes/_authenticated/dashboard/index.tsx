@@ -67,7 +67,7 @@ function DashboardPage() {
         )}
         <button
           onClick={handleSignOut}
-          className="mt-6 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          className="mt-6 ui-btn-secondary"
         >
           Log out
         </button>

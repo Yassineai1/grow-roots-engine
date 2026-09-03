@@ -32,7 +32,7 @@ type PendingBooking = {
 
 const STORAGE_KEY = "pending-booking";
 const input =
-  "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  "ui-input";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -265,7 +265,7 @@ function BookPage() {
                         endTime: String(slot.end_time),
                       })
                     }
-                    className="rounded-md border border-input px-3 py-1.5 text-sm disabled:opacity-60"
+                    className="ui-btn-secondary"
                   >
                     {String(slot.start_time).slice(0, 5)} · {slot.staff_name}
                   </button>

@@ -123,7 +123,7 @@ function SettingsPage() {
           <p className="text-sm text-muted-foreground">No business found.</p>
         ) : (
           <>
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">Your public booking link</h2>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <code className="flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 text-sm text-foreground">
@@ -133,7 +133,7 @@ function SettingsPage() {
                   type="button"
                   onClick={handleCopy}
                   disabled={!bookingUrl}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="ui-btn"
                 >
                   {copied ? "Copied!" : "Copy link"}
                 </button>
@@ -146,7 +146,7 @@ function SettingsPage() {
               </a>
             </section>
 
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">QR code</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Print this and put it at your front desk — scanning it opens your booking page.
@@ -162,7 +162,7 @@ function SettingsPage() {
               )}
             </section>
 
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">Customize your link</h2>
               <form onSubmit={handleSaveSlug} className="mt-3 space-y-3">
                 <label className="block text-sm text-muted-foreground" htmlFor="slug">
@@ -176,13 +176,13 @@ function SettingsPage() {
                     setError(null);
                     setSaved(false);
                   }}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                  className="ui-input"
                   placeholder="my-gym"
                 />
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="ui-btn"
                 >
                   {saving ? "Saving..." : "Save link"}
                 </button>

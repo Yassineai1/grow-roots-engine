@@ -78,11 +78,11 @@ function ClientHome() {
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Search by business name"
           aria-label="Search by business name"
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+          className="flex-1 ui-input"
         />
         <button
           type="submit"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          className="ui-btn"
         >
           Search
         </button>
@@ -102,7 +102,7 @@ function ClientHome() {
             <li key={b.slug}>
               <a
                 href={`/book/${b.slug}`}
-                className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
+                className="flex items-center justify-between ui-card px-3 py-2.5 text-sm hover:bg-accent"
               >
                 <span className="font-medium text-foreground">{b.name}</span>
                 <span className="text-muted-foreground">{b.business_type}</span>
@@ -114,7 +114,7 @@ function ClientHome() {
 
       <button
         onClick={handleSignOut}
-        className="mt-8 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+        className="mt-8 ui-btn-secondary"
       >
         Log out
       </button>

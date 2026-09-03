@@ -92,12 +92,12 @@ function OnboardingPage() {
             placeholder="Business name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            className="ui-input"
           />
           <select
             value={businessType}
             onChange={(e) => setBusinessType(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            className="ui-input"
           >
             <option value="Gym">Gym</option>
             <option value="Studio">Studio</option>
@@ -107,7 +107,7 @@ function OnboardingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="ui-btn w-full"
           >
             {loading ? "Creating..." : "Create business"}
           </button>

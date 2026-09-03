@@ -71,7 +71,7 @@ function BookingsPage() {
         {bookings?.map((b) => (
           <div
             key={b.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
+            className="flex flex-wrap items-center justify-between gap-3 ui-card p-4"
           >
             <div className="text-sm">
               <p className="font-medium text-foreground">
@@ -87,7 +87,7 @@ function BookingsPage() {
                 <button
                   key={next}
                   onClick={() => setStatus.mutate({ id: b.id, status: next })}
-                  className="rounded-md border border-input px-3 py-1.5 text-xs"
+                  className="ui-btn-secondary text-xs"
                 >
                   {next.replace("_", " ")}
                 </button>

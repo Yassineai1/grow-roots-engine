@@ -42,7 +42,7 @@ const emptyForm: ServiceForm = {
 };
 
 const input =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  "ui-input";
 
 function ServicesPage() {
   const qc = useQueryClient();
@@ -188,7 +188,7 @@ function ServicesPage() {
           <button
             type="submit"
             disabled={save.isPending || !business}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="ui-btn"
           >
             {form.id ? "Save changes" : "Add service"}
           </button>
@@ -196,7 +196,7 @@ function ServicesPage() {
             <button
               type="button"
               onClick={() => setForm(emptyForm)}
-              className="rounded-md border border-input px-4 py-2 text-sm"
+              className="ui-btn-secondary"
             >
               Cancel
             </button>
@@ -211,7 +211,7 @@ function ServicesPage() {
         {services?.map((s) => (
           <div
             key={s.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3"
+            className="flex flex-wrap items-center justify-between gap-2 ui-card p-4"
           >
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -235,19 +235,19 @@ function ServicesPage() {
                     capacity: s.capacity,
                   })
                 }
-                className="rounded-md border border-input px-3 py-1.5 text-xs"
+                className="ui-btn-secondary text-xs"
               >
                 Edit
               </button>
               <button
                 onClick={() => toggle.mutate({ id: s.id, is_active: s.is_active })}
-                className="rounded-md border border-input px-3 py-1.5 text-xs"
+                className="ui-btn-secondary text-xs"
               >
                 {s.is_active ? "Deactivate" : "Activate"}
               </button>
               <button
                 onClick={() => remove.mutate(s.id)}
-                className="rounded-md border border-destructive px-3 py-1.5 text-xs text-destructive"
+                className="ui-btn-secondary text-xs text-destructive"
               >
                 Delete
               </button>
