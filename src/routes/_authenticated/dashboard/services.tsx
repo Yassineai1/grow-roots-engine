@@ -206,7 +206,7 @@ function ServicesPage() {
       </form>
 
       <div className="mt-6 space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+        {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
         {services?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No services yet. Create your first service above.</p>}
         {services?.map((s) => (
           <div

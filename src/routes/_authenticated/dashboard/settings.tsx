@@ -118,7 +118,7 @@ function SettingsPage() {
         <h1 className="text-2xl font-semibold text-foreground">Booking link</h1>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>
         ) : !business ? (
           <p className="text-sm text-muted-foreground">No business found.</p>
         ) : (
