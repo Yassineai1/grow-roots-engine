@@ -42,7 +42,7 @@ const emptyForm: ServiceForm = {
 };
 
 const input =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  "ui-input";
 
 function ServicesPage() {
   const qc = useQueryClient();
@@ -127,7 +127,7 @@ function ServicesPage() {
       <DashboardNav />
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Services</h1>
 
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 rounded-md border border-border p-4 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="ui-card mt-4 grid gap-3 p-5 sm:grid-cols-2">
         <input
           required
           className={input}
@@ -188,7 +188,7 @@ function ServicesPage() {
           <button
             type="submit"
             disabled={save.isPending || !business}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="ui-btn"
           >
             {form.id ? "Save changes" : "Add service"}
           </button>
@@ -196,7 +196,7 @@ function ServicesPage() {
             <button
               type="button"
               onClick={() => setForm(emptyForm)}
-              className="rounded-md border border-input px-4 py-2 text-sm"
+              className="ui-btn-secondary"
             >
               Cancel
             </button>
@@ -206,12 +206,12 @@ function ServicesPage() {
       </form>
 
       <div className="mt-6 space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {services?.length === 0 && <p className="text-sm text-muted-foreground">No services yet.</p>}
+        {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
+        {services?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No services yet. Create your first service above.</p>}
         {services?.map((s) => (
           <div
             key={s.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3"
+            className="flex flex-wrap items-center justify-between gap-2 ui-card p-4"
           >
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -235,19 +235,19 @@ function ServicesPage() {
                     capacity: s.capacity,
                   })
                 }
-                className="rounded-md border border-input px-3 py-1.5 text-xs"
+                className="ui-btn-secondary text-xs"
               >
                 Edit
               </button>
               <button
                 onClick={() => toggle.mutate({ id: s.id, is_active: s.is_active })}
-                className="rounded-md border border-input px-3 py-1.5 text-xs"
+                className="ui-btn-secondary text-xs"
               >
                 {s.is_active ? "Deactivate" : "Activate"}
               </button>
               <button
                 onClick={() => remove.mutate(s.id)}
-                className="rounded-md border border-destructive px-3 py-1.5 text-xs text-destructive"
+                className="ui-btn-secondary text-xs text-destructive"
               >
                 Delete
               </button>

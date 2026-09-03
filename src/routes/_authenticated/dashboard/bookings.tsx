@@ -30,6 +30,14 @@ const TRANSITIONS: Record<string, string[]> = {
   no_show: [],
 };
 
+const STATUS_STYLE: Record<string, string> = {
+  pending: "text-warning",
+  confirmed: "text-success",
+  completed: "text-primary",
+  cancelled: "text-destructive",
+  no_show: "text-muted-foreground",
+};
+
 function BookingsPage() {
   const qc = useQueryClient();
   const { data: business } = useMyBusiness();
@@ -66,12 +74,12 @@ function BookingsPage() {
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
 
       <div className="mt-4 space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {bookings?.length === 0 && <p className="text-sm text-muted-foreground">No bookings yet.</p>}
+        {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
+        {bookings?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No bookings yet. Share your booking link to get started.</p>}
         {bookings?.map((b) => (
           <div
             key={b.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
+            className="flex flex-wrap items-center justify-between gap-3 ui-card p-4"
           >
             <div className="text-sm">
               <p className="font-medium text-foreground">
@@ -79,15 +87,20 @@ function BookingsPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {b.staff_name} · {b.booking_date} · {String(b.start_time).slice(0, 5)}–
-                {String(b.end_time).slice(0, 5)} · {b.status}
+                {String(b.end_time).slice(0, 5)}
               </p>
+              <span
+                className={`ui-badge mt-2 ${STATUS_STYLE[b.status] ?? "text-muted-foreground"}`}
+              >
+                {b.status.replace("_", " ")}
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {(TRANSITIONS[b.status] ?? []).map((next) => (
                 <button
                   key={next}
                   onClick={() => setStatus.mutate({ id: b.id, status: next })}
-                  className="rounded-md border border-input px-3 py-1.5 text-xs"
+                  className="ui-btn-secondary text-xs"
                 >
                   {next.replace("_", " ")}
                 </button>

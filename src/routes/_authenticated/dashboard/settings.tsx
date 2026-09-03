@@ -118,22 +118,22 @@ function SettingsPage() {
         <h1 className="text-2xl font-semibold text-foreground">Booking link</h1>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>
         ) : !business ? (
           <p className="text-sm text-muted-foreground">No business found.</p>
         ) : (
           <>
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">Your public booking link</h2>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <code className="flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 text-sm text-foreground">
+                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground">
                   {bookingUrl || "..."}
                 </code>
                 <button
                   type="button"
                   onClick={handleCopy}
                   disabled={!bookingUrl}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="ui-btn"
                 >
                   {copied ? "Copied!" : "Copy link"}
                 </button>
@@ -146,7 +146,7 @@ function SettingsPage() {
               </a>
             </section>
 
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">QR code</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Print this and put it at your front desk — scanning it opens your booking page.
@@ -155,14 +155,14 @@ function SettingsPage() {
                 <img
                   src={qr}
                   alt={`QR code linking to ${bookingUrl}`}
-                  className="mt-4 h-48 w-48 rounded-md border border-border bg-background"
+                  className="mt-4 h-48 w-48 rounded-lg border border-border bg-foreground p-2"
                 />
               ) : (
                 <p className="mt-4 text-sm text-muted-foreground">Generating QR code...</p>
               )}
             </section>
 
-            <section className="rounded-lg border border-border p-4">
+            <section className="ui-card p-4">
               <h2 className="text-sm font-medium text-foreground">Customize your link</h2>
               <form onSubmit={handleSaveSlug} className="mt-3 space-y-3">
                 <label className="block text-sm text-muted-foreground" htmlFor="slug">
@@ -176,13 +176,13 @@ function SettingsPage() {
                     setError(null);
                     setSaved(false);
                   }}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                  className="ui-input"
                   placeholder="my-gym"
                 />
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="ui-btn"
                 >
                   {saving ? "Saving..." : "Save link"}
                 </button>
