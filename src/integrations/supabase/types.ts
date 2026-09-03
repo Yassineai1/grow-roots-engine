@@ -442,7 +442,7 @@ export type Database = {
         Args: { _q: string }
         Returns: {
           business_type: string
-          id: string
+          logo_url: string
           name: string
           slug: string
         }[]
