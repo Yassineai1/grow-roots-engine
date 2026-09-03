@@ -27,6 +27,7 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
+  const [role, setRole] = useState<"client" | "business_owner">("client");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +46,7 @@ function SignupPage() {
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: { full_name: fullName, role },
       },
     });
 
@@ -65,7 +66,7 @@ function SignupPage() {
       id: data.session.user.id,
       email,
       full_name: fullName,
-      role: "business_owner",
+      role,
     });
 
     setLoading(false);
@@ -77,13 +78,39 @@ function SignupPage() {
       window.location.assign(redirect);
       return;
     }
-    navigate({ to: "/onboarding" });
+    navigate({ to: role === "client" ? "/" : "/onboarding" });
   }
+
+  const roleOption = (value: "client" | "business_owner", label: string, hint: string) => (
+    <button
+      key={value}
+      type="button"
+      onClick={() => setRole(value)}
+      className={`w-full rounded-md border p-3 text-left text-sm ${
+        role === value ? "border-primary" : "border-input"
+      }`}
+      aria-pressed={role === value}
+    >
+      <span className="font-medium text-foreground">{label}</span>
+      <span className="block text-xs text-muted-foreground">{hint}</span>
+    </button>
+  );
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold text-foreground">Create your account</h1>
+        <div className="mt-6">
+          <p className="text-sm font-medium text-foreground">I want to...</p>
+          <div className="mt-2 space-y-2">
+            {roleOption("client", "Book services as a client", "Browse and book sessions")}
+            {roleOption(
+              "business_owner",
+              "Manage my own business",
+              "Set up a gym, studio, or coaching business",
+            )}
+          </div>
+        </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <input
             required
@@ -111,6 +138,7 @@ function SignupPage() {
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
           {info && <p className="text-sm text-muted-foreground">{info}</p>}
+
           <button
             type="submit"
             disabled={loading}
