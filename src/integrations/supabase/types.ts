@@ -438,6 +438,15 @@ export type Database = {
           service_type: string
         }[]
       }
+      search_public_businesses: {
+        Args: { _q: string }
+        Returns: {
+          business_type: string
+          logo_url: string
+          name: string
+          slug: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
