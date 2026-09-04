@@ -30,6 +30,7 @@ type ServiceForm = {
   duration_minutes: number;
   price: number;
   capacity: number;
+  requires_payment: boolean;
 };
 
 const emptyForm: ServiceForm = {
@@ -39,6 +40,7 @@ const emptyForm: ServiceForm = {
   duration_minutes: 60,
   price: 0,
   capacity: 1,
+  requires_payment: false,
 };
 
 const input =
@@ -74,6 +76,7 @@ function ServicesPage() {
         duration_minutes: values.duration_minutes,
         price: values.price,
         capacity: values.service_type === "one_on_one" ? 1 : values.capacity,
+        requires_payment: values.requires_payment,
       };
       const { error: e } = values.id
         ? await supabase.from("services").update(payload).eq("id", values.id)
@@ -184,6 +187,15 @@ function ServicesPage() {
           value={form.capacity}
           onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
         />
+        <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={form.requires_payment}
+            onChange={(e) => setForm({ ...form, requires_payment: e.target.checked })}
+            className="h-4 w-4 accent-primary"
+          />
+          Require online payment for this service
+        </label>
         <div className="flex gap-2">
           <button
             type="submit"
@@ -221,6 +233,9 @@ function ServicesPage() {
                 {s.service_type === "group_class" ? "Group class" : "One-on-one"} ·{" "}
                 {s.duration_minutes} min · {s.price} · capacity {s.capacity}
               </p>
+              {s.requires_payment && (
+                <span className="ui-badge mt-1 text-primary">Payment required</span>
+              )}
             </div>
             <div className="flex gap-2">
               <button
@@ -233,6 +248,7 @@ function ServicesPage() {
                     duration_minutes: s.duration_minutes,
                     price: Number(s.price),
                     capacity: s.capacity,
+                    requires_payment: s.requires_payment,
                   })
                 }
                 className="ui-btn-secondary text-xs"

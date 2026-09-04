@@ -4,6 +4,12 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
 import { useMyBusiness } from "@/lib/useMyBusiness";
+import {
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_STATUS_STYLE,
+  formatMoney,
+  type PaymentStatus,
+} from "@/lib/payments/types";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
   head: () => ({
@@ -94,6 +100,16 @@ function BookingsPage() {
               >
                 {b.status.replace("_", " ")}
               </span>
+              {b.requires_payment && (
+                <span
+                  className={`ui-badge mt-2 ml-2 ${
+                    PAYMENT_STATUS_STYLE[(b.payment_status ?? "pending") as PaymentStatus]
+                  }`}
+                >
+                  {PAYMENT_STATUS_LABEL[(b.payment_status ?? "pending") as PaymentStatus]} ·{" "}
+                  {formatMoney(b.payment_amount === null ? null : Number(b.payment_amount), b.payment_currency)}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {(TRANSITIONS[b.status] ?? []).map((next) => (
