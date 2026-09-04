@@ -1,7 +1,15 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  cancelBookingCheckout,
+  resolveMockPayment,
+  retryBookingPayment,
+  startBookingCheckout,
+} from "@/lib/payments.functions";
+import { formatMoney } from "@/lib/payments/types";
 
 export const Route = createFileRoute("/book/$slug")({
   ssr: false,
@@ -52,6 +60,23 @@ function BookPage() {
     status: string;
   } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [checkout, setCheckout] = useState<{
+    paymentId: string;
+    bookingId: string;
+    amount: number;
+    currency: string;
+    mode: string;
+    service: string;
+    staff: string;
+    date: string;
+    time: string;
+  } | null>(null);
+  const [payFailed, setPayFailed] = useState(false);
+
+  const startCheckout = useServerFn(startBookingCheckout);
+  const resolvePayment = useServerFn(resolveMockPayment);
+  const retryPayment = useServerFn(retryBookingPayment);
+  const cancelCheckout = useServerFn(cancelBookingCheckout);
 
   const { data: business } = useQuery({
     queryKey: ["public-business", slug],
@@ -71,6 +96,18 @@ function BookPage() {
       });
       if (e) throw e;
       return data ?? [];
+    },
+  });
+
+  const { data: paymentAvailability } = useQuery({
+    queryKey: ["payment-availability", business?.id],
+    enabled: !!business?.id,
+    queryFn: async () => {
+      const { data, error: e } = await supabase.rpc("get_public_payment_availability", {
+        _business_id: business!.id,
+      });
+      if (e) throw e;
+      return data?.[0] ?? { payment_configured: false, provider: "cmi" };
     },
   });
 
@@ -96,6 +133,48 @@ function BookPage() {
       if (!user) {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
         navigate({ to: "/login", search: { redirect: `/book/${slug}` } });
+        return;
+      }
+
+      const chosen = services?.find((s) => s.id === pending.serviceId);
+      if (chosen?.requires_payment) {
+        if (!paymentAvailability?.payment_configured) {
+          setError(
+            "Online payment is not yet available for this business. Please contact the business directly.",
+          );
+          return;
+        }
+        const res = await startCheckout({
+          data: {
+            businessId: business!.id,
+            serviceId: pending.serviceId,
+            staffId: pending.staffId,
+            date: pending.date,
+            startTime: pending.startTime,
+            endTime: pending.endTime,
+          },
+        });
+        if (res.status === "unavailable") {
+          setError(
+            "Online payment is not yet available for this business. Please contact the business directly.",
+          );
+          return;
+        }
+        const staffLabel =
+          slots?.find((s) => s.staff_id === pending.staffId)?.staff_name ?? "Staff";
+        setPayFailed(false);
+        setCheckout({
+          paymentId: res.paymentId,
+          bookingId: res.bookingId,
+          amount: res.amount,
+          currency: res.currency,
+          mode: res.mode,
+          service: chosen.name,
+          staff: staffLabel,
+          date: pending.date,
+          time: `${pending.startTime.slice(0, 5)}–${pending.endTime.slice(0, 5)}`,
+        });
+        refetchSlots();
         return;
       }
 
@@ -186,7 +265,130 @@ function BookPage() {
         <p className="text-sm text-muted-foreground">{business.business_type}</p>
       )}
 
-      {confirmation ? (
+      {checkout ? (
+        <div className="ui-card mt-6 p-5">
+          <h2 className="text-lg font-medium text-foreground">Payment required</h2>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <li>Service: {checkout.service}</li>
+            <li>Staff: {checkout.staff}</li>
+            <li>
+              Date: {checkout.date} · {checkout.time}
+            </li>
+            <li>Amount: {formatMoney(checkout.amount, checkout.currency)}</li>
+          </ul>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Your slot is held for 15 minutes while you complete payment.
+          </p>
+          {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+          {checkout.mode === "test" ? (
+            <>
+              <p className="mt-4 text-xs text-warning">
+                Test mode — no real money is taken.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  disabled={busy}
+                  className="ui-btn"
+                  onClick={async () => {
+                    setBusy(true);
+                    setError(null);
+                    try {
+                      const res = await resolvePayment({
+                        data: { paymentId: checkout.paymentId, outcome: "success" },
+                      });
+                      if (res.status === "paid") {
+                        setCheckout(null);
+                        setConfirmation({
+                          service: checkout.service,
+                          staff: checkout.staff,
+                          date: checkout.date,
+                          time: checkout.time,
+                          status: "confirmed · paid",
+                        });
+                      }
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                      refetchSlots();
+                    }
+                  }}
+                >
+                  Simulate successful payment
+                </button>
+                <button
+                  disabled={busy}
+                  className="ui-btn-secondary"
+                  onClick={async () => {
+                    setBusy(true);
+                    setError(null);
+                    try {
+                      await resolvePayment({
+                        data: { paymentId: checkout.paymentId, outcome: "failure" },
+                      });
+                      setPayFailed(true);
+                      setError("Payment failed. Your booking is not confirmed.");
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Simulate failed payment
+                </button>
+                {payFailed && (
+                  <button
+                    disabled={busy}
+                    className="ui-btn"
+                    onClick={async () => {
+                      setBusy(true);
+                      setError(null);
+                      try {
+                        const res = await retryPayment({
+                          data: { bookingId: checkout.bookingId },
+                        });
+                        if (res.status === "checkout") {
+                          setCheckout({ ...checkout, paymentId: res.paymentId });
+                          setPayFailed(false);
+                        }
+                      } catch (e) {
+                        setError((e as Error).message);
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Retry payment
+                  </button>
+                )}
+                <button
+                  disabled={busy}
+                  className="ui-btn-secondary"
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await cancelCheckout({ data: { paymentId: checkout.paymentId } });
+                    } finally {
+                      setCheckout(null);
+                      setPayFailed(false);
+                      setBusy(false);
+                      refetchSlots();
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Online payment is not yet available for this business. Please contact the business
+              directly.
+            </p>
+          )}
+        </div>
+      ) : confirmation ? (
         <div className="ui-card mt-6 p-5">
           <h2 className="text-lg font-medium text-foreground">Booking requested</h2>
           <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
@@ -226,6 +428,11 @@ function BookPage() {
                   {s.service_type === "group_class" ? "Group class" : "One-on-one"} ·{" "}
                   {s.duration_minutes} min · {s.price}
                 </span>
+                {s.requires_payment && (
+                  <span className="ui-badge mt-1 text-primary">
+                    Payment required · {formatMoney(Number(s.price), "MAD")}
+                  </span>
+                )}
                 {s.description && (
                   <span className="block text-xs text-muted-foreground">{s.description}</span>
                 )}
@@ -248,6 +455,13 @@ function BookPage() {
                   className={input}
                 />
               </div>
+              {services?.find((s) => s.id === serviceId)?.requires_payment &&
+                !paymentAvailability?.payment_configured && (
+                  <p className="mt-2 text-sm text-warning">
+                    Online payment is not yet available for this business. Please contact the
+                    business directly.
+                  </p>
+                )}
               {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
               <div className="mt-3 flex flex-wrap gap-2">
                 {slots?.length === 0 && (
