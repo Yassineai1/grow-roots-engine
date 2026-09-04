@@ -442,6 +442,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_business_payment_config: {
+        Args: { _business_id: string }
+        Returns: undefined
+      }
       find_user_by_email: {
         Args: { _email: string }
         Returns: {
@@ -475,6 +479,16 @@ export type Database = {
           staff_name: string
           start_time: string
           status: string
+        }[]
+      }
+      get_business_payment_secrets: {
+        Args: { _business_id: string }
+        Returns: {
+          merchant_id: string
+          mode: string
+          payment_configured: boolean
+          provider: string
+          store_key: string
         }[]
       }
       get_business_staff: {
@@ -537,6 +551,15 @@ export type Database = {
           name: string
           slug: string
         }[]
+      }
+      set_business_payment_config: {
+        Args: {
+          _business_id: string
+          _merchant_id: string
+          _mode: string
+          _store_key: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
