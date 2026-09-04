@@ -56,6 +56,7 @@ export type Database = {
           client_id: string
           created_at: string
           end_time: string
+          hold_expires_at: string | null
           id: string
           notes: string | null
           service_id: string
@@ -69,6 +70,7 @@ export type Database = {
           client_id: string
           created_at?: string
           end_time: string
+          hold_expires_at?: string | null
           id?: string
           notes?: string | null
           service_id: string
@@ -82,6 +84,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           end_time?: string
+          hold_expires_at?: string | null
           id?: string
           notes?: string | null
           service_id?: string
@@ -209,6 +212,70 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          business_id: string
+          client_id: string
+          created_at: string
+          currency: string
+          id: string
+          provider: string
+          provider_payment_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          business_id: string
+          client_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          business_id?: string
+          client_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           business_id: string
@@ -220,6 +287,7 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          requires_payment: boolean
           service_type: string
         }
         Insert: {
@@ -232,6 +300,7 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          requires_payment?: boolean
           service_type: string
         }
         Update: {
@@ -244,6 +313,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          requires_payment?: boolean
           service_type?: string
         }
         Relationships: [
@@ -397,6 +467,10 @@ export type Database = {
           end_time: string
           id: string
           notes: string
+          payment_amount: number
+          payment_currency: string
+          payment_status: string
+          requires_payment: boolean
           service_name: string
           staff_name: string
           start_time: string
@@ -415,6 +489,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_payment_settings: {
+        Args: { _business_id: string }
+        Returns: {
+          merchant_id_masked: string
+          mode: string
+          payment_configured: boolean
+          provider: string
+        }[]
+      }
       get_public_business: {
         Args: { _slug: string }
         Returns: {
@@ -426,6 +509,13 @@ export type Database = {
           slug: string
         }[]
       }
+      get_public_payment_availability: {
+        Args: { _business_id: string }
+        Returns: {
+          payment_configured: boolean
+          provider: string
+        }[]
+      }
       get_public_services: {
         Args: { _business_id: string }
         Returns: {
@@ -435,6 +525,7 @@ export type Database = {
           id: string
           name: string
           price: number
+          requires_payment: boolean
           service_type: string
         }[]
       }
