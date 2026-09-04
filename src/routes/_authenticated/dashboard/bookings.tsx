@@ -4,6 +4,12 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
 import { useMyBusiness } from "@/lib/useMyBusiness";
+import {
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_STATUS_STYLE,
+  formatMoney,
+  type PaymentStatus,
+} from "@/lib/payments/types";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
   head: () => ({
