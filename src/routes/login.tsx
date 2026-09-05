@@ -30,23 +30,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetNotice, setResetNotice] = useState<string | null>(null);
-  const [resetting, setResetting] = useState(false);
 
-  async function onForgotSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setResetting(true);
-    // Always show the same message so no one can probe which emails exist.
-    await supabase.auth
-      .resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-      .catch(() => undefined);
-    setResetting(false);
-    setResetNotice("If an account exists with this email, a reset link has been sent.");
-  }
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
