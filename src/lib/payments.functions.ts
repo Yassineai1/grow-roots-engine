@@ -165,6 +165,10 @@ export const startBookingCheckout = createServerFn({ method: "POST" })
       .single();
     if (bookingError) throw new Error(bookingError.message);
 
+    // Owner "new booking" notification (queued by the DB trigger).
+    const { dispatchPendingBookingEmails } = await import("@/lib/notifications.server");
+    void dispatchPendingBookingEmails();
+
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from("payments")
       .insert({
@@ -345,6 +349,9 @@ export const resolveMockPayment = createServerFn({ method: "POST" })
         throw new Error("The slot was taken while payment completed. The payment was reversed.");
       }
     }
+    // Client "booking confirmed" notification (queued by the DB trigger).
+    const { dispatchPendingBookingEmails } = await import("@/lib/notifications.server");
+    await dispatchPendingBookingEmails();
     return { status: "paid" as const, bookingConfirmed: true };
   });
 
