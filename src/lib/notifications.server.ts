@@ -118,14 +118,19 @@ export async function dispatchPendingBookingEmails(limit = 20) {
     if (!claimed || claimed.length === 0) continue;
 
     try {
-      await sendBookingEmail(row.event_type as BookingEmailType, {
+      const result = await sendBookingEmail(row.event_type as BookingEmailType, {
         to: row.recipient_email,
         subject: row.subject,
         payload: (row.payload ?? {}) as BookingEmailPayload,
       });
+      // Only claim delivery when a provider actually accepted the message.
       await supabaseAdmin
         .from("notification_outbox")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .update(
+          result.delivered
+            ? { status: "sent", sent_at: new Date().toISOString(), last_error: null }
+            : { status: "failed", last_error: "No email provider configured — logged only." },
+        )
         .eq("id", row.id);
       processed += 1;
     } catch (e) {
