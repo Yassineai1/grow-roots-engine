@@ -66,11 +66,15 @@ function BookingsPage() {
 
   // Drains anything still queued (e.g. a notification whose dispatch call was
   // interrupted by a page refresh). Each row is claimed once server-side.
+  const drained = useRef(false);
   useEffect(() => {
+    if (drained.current) return;
+    drained.current = true;
     dispatchEmails({ data: undefined }).catch((e) =>
       console.error("[booking-email] dispatch failed", e),
     );
   }, [dispatchEmails]);
+
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
