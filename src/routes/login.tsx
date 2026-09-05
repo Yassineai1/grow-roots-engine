@@ -111,30 +111,12 @@ function LoginPage() {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
-        {showForgot ? (
-          <form onSubmit={onForgotSubmit} className="mt-4 space-y-3">
-            <input
-              type="email"
-              required
-              placeholder="Your email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              className="ui-input"
-            />
-            <button type="submit" disabled={resetting} className="ui-btn-secondary w-full text-sm">
-              {resetting ? "Sending..." : "Send reset link"}
-            </button>
-            {resetNotice && <p className="text-sm text-muted-foreground">{resetNotice}</p>}
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowForgot(true)}
-            className="mt-3 text-sm text-muted-foreground underline"
-          >
+        <p className="mt-3 text-sm">
+          <Link to="/forgot-password" className="text-muted-foreground underline">
             Forgot password?
-          </button>
-        )}
+          </Link>
+        </p>
+
         <p className="mt-4 text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" search={redirect ? { redirect } : {}} className="text-foreground underline">
