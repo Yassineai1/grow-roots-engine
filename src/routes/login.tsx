@@ -3,8 +3,10 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
-    typeof search['redirect'] === "string" ? { redirect: search['redirect'] as string } : {},
+  validateSearch: (search: Record<string, unknown>): { redirect?: string; reset?: string } => ({
+    ...(typeof search['redirect'] === "string" ? { redirect: search['redirect'] as string } : {}),
+    ...(typeof search['reset'] === "string" ? { reset: search['reset'] as string } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Log in | Fitly Business Platform" },
@@ -23,11 +25,28 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { redirect } = Route.useSearch();
+  const { redirect, reset } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+
+  async function onForgotSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setResetting(true);
+    // Always show the same message so no one can probe which emails exist.
+    await supabase.auth
+      .resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      .catch(() => undefined);
+    setResetting(false);
+    setResetNotice("If an account exists with this email, a reset link has been sent.");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,6 +80,11 @@ function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold text-foreground">Log in</h1>
+        {reset && (
+          <p className="mt-3 text-sm text-success">
+            Your password has been updated. Log in with your new password.
+          </p>
+        )}
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <input
             type="email"
@@ -87,6 +111,30 @@ function LoginPage() {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
+        {showForgot ? (
+          <form onSubmit={onForgotSubmit} className="mt-4 space-y-3">
+            <input
+              type="email"
+              required
+              placeholder="Your email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              className="ui-input"
+            />
+            <button type="submit" disabled={resetting} className="ui-btn-secondary w-full text-sm">
+              {resetting ? "Sending..." : "Send reset link"}
+            </button>
+            {resetNotice && <p className="text-sm text-muted-foreground">{resetNotice}</p>}
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowForgot(true)}
+            className="mt-3 text-sm text-muted-foreground underline"
+          >
+            Forgot password?
+          </button>
+        )}
         <p className="mt-4 text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" search={redirect ? { redirect } : {}} className="text-foreground underline">
