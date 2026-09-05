@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { dispatchBookingNotifications } from "@/lib/notifications.functions";
 import { DashboardNav } from "@/components/DashboardNav";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 import {
@@ -48,6 +50,7 @@ function BookingsPage() {
   const qc = useQueryClient();
   const { data: business } = useMyBusiness();
   const [error, setError] = useState<string | null>(null);
+  const dispatchEmails = useServerFn(dispatchBookingNotifications);
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["business-bookings", business?.id],
@@ -68,6 +71,8 @@ function BookingsPage() {
     },
     onSuccess: () => {
       setError(null);
+      // Sends the client confirmation email once, when the booking becomes confirmed.
+      void dispatchEmails({ data: undefined }).catch(() => {});
       qc.invalidateQueries({ queryKey: ["business-bookings"] });
     },
     onError: (e: Error) => setError(e.message),

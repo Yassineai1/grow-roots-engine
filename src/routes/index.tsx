@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +60,12 @@ function ClientHome() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-foreground">Welcome to Fitly</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">Welcome to Fitly</h1>
+        <Link to="/my-bookings" className="text-sm text-muted-foreground underline">
+          My bookings
+        </Link>
+      </div>
       <p className="mt-2 text-sm text-muted-foreground">
         Ask your gym, coach, or studio for their booking link — or if you know the business name,
         search for it below.

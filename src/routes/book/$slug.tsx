@@ -9,6 +9,7 @@ import {
   retryBookingPayment,
   startBookingCheckout,
 } from "@/lib/payments.functions";
+import { dispatchBookingNotifications } from "@/lib/notifications.functions";
 import { formatMoney } from "@/lib/payments/types";
 
 export const Route = createFileRoute("/book/$slug")({
@@ -77,6 +78,7 @@ function BookPage() {
   const resolvePayment = useServerFn(resolveMockPayment);
   const retryPayment = useServerFn(retryBookingPayment);
   const cancelCheckout = useServerFn(cancelBookingCheckout);
+  const dispatchEmails = useServerFn(dispatchBookingNotifications);
 
   const { data: business } = useQuery({
     queryKey: ["public-business", slug],
@@ -217,6 +219,9 @@ function BookPage() {
         end_time: pending.endTime,
       });
       if (bookingError) throw bookingError;
+
+      // Owner "new booking" notification; the server de-duplicates it.
+      void dispatchEmails({ data: undefined }).catch(() => {});
 
       const service = services?.find((s) => s.id === pending.serviceId);
       const staffName =

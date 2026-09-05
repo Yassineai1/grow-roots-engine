@@ -212,6 +212,66 @@ export type Database = {
           },
         ]
       }
+      notification_outbox: {
+        Row: {
+          attempts: number
+          booking_id: string
+          business_id: string
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          payload: Json
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          attempts?: number
+          booking_id: string
+          business_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          attempts?: number
+          booking_id?: string
+          business_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -442,6 +502,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_own_booking: {
+        Args: { _booking_id: string }
+        Returns: {
+          payment_status: string
+          status: string
+        }[]
+      }
       clear_business_payment_config: {
         Args: { _business_id: string }
         Returns: undefined
@@ -501,6 +568,23 @@ export type Database = {
           is_active: boolean
           specialties: string[]
           user_id: string
+        }[]
+      }
+      get_my_bookings: {
+        Args: never
+        Returns: {
+          booking_date: string
+          business_name: string
+          can_cancel: boolean
+          end_time: string
+          id: string
+          payment_amount: number
+          payment_currency: string
+          payment_status: string
+          service_name: string
+          staff_name: string
+          start_time: string
+          status: string
         }[]
       }
       get_payment_settings: {

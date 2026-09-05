@@ -12,3 +12,10 @@
 - [x] Provider-agnostic payment layer; CMI mock isolated in provider.server.ts
 - [x] /dashboard/payments, payment status on /dashboard/bookings, payment settings
 - [ ] Real CMI signed request/redirect + server verification (needs real credentials)
+
+## MVP readiness (notifications, password reset, client cancellation)
+- [x] Booking notification outbox + DB trigger (created / confirmed / client-cancelled), one row per event
+- [x] sendBookingEmail + outbox dispatcher (logs only — real provider TODO in notifications.server.ts)
+- [ ] Connect a real transactional email provider
+- [x] Forgot password on /login + /reset-password page
+- [x] /my-bookings with client self-cancellation (server-enforced 2h window, own bookings only)
