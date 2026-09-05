@@ -221,7 +221,14 @@ function BookPage() {
       if (bookingError) throw bookingError;
 
       // Owner "new booking" notification; the server de-duplicates it.
-      void dispatchEmails({ data: undefined }).catch(() => {});
+      // Awaited (not fire-and-forget) so a failure surfaces in the console
+      // instead of silently leaving the queued notification unprocessed.
+      try {
+        await dispatchEmails({ data: undefined });
+      } catch (notifyError) {
+        console.error("[booking-email] dispatch failed", notifyError);
+      }
+
 
       const service = services?.find((s) => s.id === pending.serviceId);
       const staffName =
