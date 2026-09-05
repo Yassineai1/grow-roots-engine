@@ -90,10 +90,20 @@ export async function sendBookingEmail(
 ): Promise<{ delivered: boolean }> {
   const body = renderBookingEmail(type, email.payload);
   console.log(
-    `[booking-email] event=${type} to=${email.to} subject="${email.subject}"\n${body}\n[booking-email] NOT DELIVERED — no email provider configured.`,
+    [
+      "──────── BOOKING EMAIL ────────",
+      `event:     ${type}`,
+      `to:        ${email.to}`,
+      `subject:   ${email.subject}`,
+      "body:",
+      body,
+      "status:    NOT DELIVERED — no transactional email provider is connected.",
+      "───────────────────────────────",
+    ].join("\n"),
   );
   return { delivered: false };
 }
+
 
 /** Drains pending outbox rows. Safe to call repeatedly: each row is claimed once. */
 export async function dispatchPendingBookingEmails(limit = 20) {
