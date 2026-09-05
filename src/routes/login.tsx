@@ -30,23 +30,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetNotice, setResetNotice] = useState<string | null>(null);
-  const [resetting, setResetting] = useState(false);
 
-  async function onForgotSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setResetting(true);
-    // Always show the same message so no one can probe which emails exist.
-    await supabase.auth
-      .resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-      .catch(() => undefined);
-    setResetting(false);
-    setResetNotice("If an account exists with this email, a reset link has been sent.");
-  }
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -111,30 +96,12 @@ function LoginPage() {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
-        {showForgot ? (
-          <form onSubmit={onForgotSubmit} className="mt-4 space-y-3">
-            <input
-              type="email"
-              required
-              placeholder="Your email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              className="ui-input"
-            />
-            <button type="submit" disabled={resetting} className="ui-btn-secondary w-full text-sm">
-              {resetting ? "Sending..." : "Send reset link"}
-            </button>
-            {resetNotice && <p className="text-sm text-muted-foreground">{resetNotice}</p>}
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowForgot(true)}
-            className="mt-3 text-sm text-muted-foreground underline"
-          >
+        <p className="mt-3 text-sm">
+          <Link to="/forgot-password" className="text-muted-foreground underline">
             Forgot password?
-          </button>
-        )}
+          </Link>
+        </p>
+
         <p className="mt-4 text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" search={redirect ? { redirect } : {}} className="text-foreground underline">

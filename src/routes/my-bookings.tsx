@@ -75,8 +75,13 @@ function MyBookingsPage() {
         : "Your booking is cancelled.",
     );
     await qc.invalidateQueries({ queryKey: ["my-bookings"] });
-    // Fire the queued owner notification; the server de-duplicates it.
-    void dispatchEmails({ data: undefined }).catch(() => {});
+    // Fire the queued owner cancellation notification; the server de-duplicates it.
+    try {
+      await dispatchEmails({ data: undefined });
+    } catch (notifyError) {
+      console.error("[booking-email] dispatch failed", notifyError);
+    }
+
   }
 
   return (
