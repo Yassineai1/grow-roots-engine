@@ -119,13 +119,16 @@ export async function dispatchPendingBookingEmails(limit = 20) {
   let processed = 0;
   for (const row of rows ?? []) {
     // Claim the row first so a concurrent dispatch cannot send it twice.
+    // The attempts check is an optimistic lock: only one racing update wins.
     const { data: claimed } = await supabaseAdmin
       .from("notification_outbox")
       .update({ attempts: (row.attempts ?? 0) + 1 })
       .eq("id", row.id)
       .eq("status", "pending")
+      .eq("attempts", row.attempts ?? 0)
       .select("id");
     if (!claimed || claimed.length === 0) continue;
+
 
     try {
       const result = await sendBookingEmail(row.event_type as BookingEmailType, {
