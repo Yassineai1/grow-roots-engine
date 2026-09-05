@@ -64,19 +64,32 @@ function BookingsPage() {
     },
   });
 
+  // Drains anything still queued (e.g. a notification whose dispatch call was
+  // interrupted by a page refresh). Each row is claimed once server-side.
+  useEffect(() => {
+    dispatchEmails({ data: undefined }).catch((e) =>
+      console.error("[booking-email] dispatch failed", e),
+    );
+  }, [dispatchEmails]);
+
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error: e } = await supabase.from("bookings").update({ status }).eq("id", id);
       if (e) throw e;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setError(null);
       // Sends the client confirmation email once, when the booking becomes confirmed.
-      void dispatchEmails({ data: undefined }).catch(() => {});
+      try {
+        await dispatchEmails({ data: undefined });
+      } catch (notifyError) {
+        console.error("[booking-email] dispatch failed", notifyError);
+      }
       qc.invalidateQueries({ queryKey: ["business-bookings"] });
     },
     onError: (e: Error) => setError(e.message),
   });
+
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
