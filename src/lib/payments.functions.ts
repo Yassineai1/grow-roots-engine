@@ -345,8 +345,18 @@ export const resolveMockPayment = createServerFn({ method: "POST" })
         .eq("id", payment.booking_id)
         .eq("status", "pending");
       if (error) {
-        await supabaseAdmin.from("payments").update({ status: "refunded" }).eq("id", payment.id);
-        throw new Error("The slot was taken while payment completed. The payment was reversed.");
+        const msg = error.message ?? "";
+        const isSlotConflict =
+          msg.includes("This time slot is no longer available") ||
+          msg.includes("This class is full");
+        if (isSlotConflict) {
+          await supabaseAdmin.from("payments").update({ status: "refunded" }).eq("id", payment.id);
+          throw new Error("The slot was taken while payment completed. The payment was reversed.");
+        }
+        // Any other validation/authorization failure is not a slot conflict:
+        // surface the real error and leave the payment paid for reconciliation.
+        console.error("[mock-payment] booking confirmation failed:", msg);
+        throw new Error(`Payment succeeded but booking confirmation failed: ${msg}`);
       }
     }
     // Client "booking confirmed" notification (queued by the DB trigger).
