@@ -10,6 +10,7 @@ import {
   startBookingCheckout,
 } from "@/lib/payments.functions";
 import { dispatchBookingNotifications } from "@/lib/notifications.functions";
+import { getBrandingImageUrls } from "@/lib/branding.functions";
 import { formatMoney } from "@/lib/payments/types";
 
 export const Route = createFileRoute("/book/$slug")({
