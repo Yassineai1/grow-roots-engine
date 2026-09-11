@@ -7,6 +7,7 @@ const links = [
   { to: "/dashboard/bookings", label: "Bookings" },
   { to: "/dashboard/payments", label: "Payments" },
   { to: "/dashboard/settings", label: "Booking link" },
+  { to: "/dashboard/business", label: "Settings" },
 ] as const;
 
 export function DashboardNav() {

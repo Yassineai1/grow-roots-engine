@@ -125,43 +125,58 @@ export type Database = {
       }
       businesses: {
         Row: {
+          accent_color: string | null
           brand_color: string | null
           business_type: string
+          cover_image_url: string | null
           created_at: string
+          description: string | null
           id: string
           language_default: string
           logo_url: string | null
           name: string
           owner_id: string
+          phone: string | null
           settings: Json
           slug: string
           subscription_status: string
+          whatsapp: string | null
         }
         Insert: {
+          accent_color?: string | null
           brand_color?: string | null
           business_type: string
+          cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           language_default?: string
           logo_url?: string | null
           name: string
           owner_id: string
+          phone?: string | null
           settings?: Json
           slug: string
           subscription_status?: string
+          whatsapp?: string | null
         }
         Update: {
+          accent_color?: string | null
           brand_color?: string | null
           business_type?: string
+          cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           language_default?: string
           logo_url?: string | null
           name?: string
           owner_id?: string
+          phone?: string | null
           settings?: Json
           slug?: string
           subscription_status?: string
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -599,12 +614,17 @@ export type Database = {
       get_public_business: {
         Args: { _slug: string }
         Returns: {
+          accent_color: string
           brand_color: string
           business_type: string
+          cover_image_url: string
+          description: string
           id: string
           logo_url: string
           name: string
+          phone: string
           slug: string
+          whatsapp: string
         }[]
       }
       get_public_payment_availability: {

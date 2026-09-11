@@ -19,3 +19,8 @@
 - [ ] Connect a real transactional email provider
 - [x] Forgot password on /login + /reset-password page
 - [x] /my-bookings with client self-cancellation (server-enforced 2h window, own bookings only)
+
+## Business settings & branding
+- [x] Owner-only /dashboard/business (name, description, logo, cover, primary/accent colors, phone, WhatsApp)
+- [x] Private branding storage bucket with owner-folder policies + signed URLs
+- [x] Public booking page consumes saved branding
