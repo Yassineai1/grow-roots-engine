@@ -90,6 +90,12 @@ function BookPage() {
     },
   });
 
+  const brandingImages = useServerFn(getBrandingImageUrls);
+  const { data: images } = useQuery({
+    queryKey: ["public-branding-images", slug],
+    queryFn: () => brandingImages({ data: { slug } }),
+  });
+
   const { data: services } = useQuery({
     queryKey: ["public-services", business?.id],
     enabled: !!business?.id,
@@ -272,10 +278,60 @@ function BookPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">{business?.name ?? "Loading..."}</h1>
-      {business?.business_type && (
-        <p className="text-sm text-muted-foreground">{business.business_type}</p>
+    <main
+      className="mx-auto max-w-2xl px-4 py-10"
+      style={
+        {
+          ...(business?.brand_color ? { "--primary": business.brand_color } : {}),
+          ...(business?.accent_color ? { "--accent": business.accent_color } : {}),
+        } as React.CSSProperties
+      }
+    >
+      {images?.coverUrl && (
+        <img
+          src={images.coverUrl}
+          alt={`${business?.name ?? "Business"} cover`}
+          className="mb-5 h-40 w-full rounded-xl border border-border object-cover sm:h-56"
+        />
+      )}
+      <div className="flex items-center gap-3">
+        {images?.logoUrl && (
+          <img
+            src={images.logoUrl}
+            alt={`${business?.name ?? "Business"} logo`}
+            className="h-14 w-14 shrink-0 rounded-lg border border-border object-contain"
+          />
+        )}
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {business?.name ?? "Loading..."}
+          </h1>
+          {business?.business_type && (
+            <p className="text-sm text-muted-foreground">{business.business_type}</p>
+          )}
+        </div>
+      </div>
+      {business?.description && (
+        <p className="mt-3 text-sm text-muted-foreground">{business.description}</p>
+      )}
+      {(business?.phone || business?.whatsapp) && (
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          {business?.phone && (
+            <a className="text-primary underline" href={`tel:${business.phone.replace(/\s/g, "")}`}>
+              Call {business.phone}
+            </a>
+          )}
+          {business?.whatsapp && (
+            <a
+              className="text-primary underline"
+              target="_blank"
+              rel="noreferrer"
+              href={`https://wa.me/${business.whatsapp.replace(/[^0-9]/g, "")}`}
+            >
+              WhatsApp
+            </a>
+          )}
+        </div>
       )}
 
       {checkout ? (
