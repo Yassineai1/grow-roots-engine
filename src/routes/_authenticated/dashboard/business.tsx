@@ -162,7 +162,7 @@ function BusinessSettingsPage() {
       setError("Description must be under 1000 characters.");
       return;
     }
-    const whatsappDigits = form.whatsapp.replace(/[^0-9]/g, "");
+    const whatsappDigits = normalizeWhatsappNumber(form.whatsapp);
     if (form.whatsapp.trim() && (whatsappDigits.length < 8 || whatsappDigits.length > 15)) {
       setError("WhatsApp number must contain 8 to 15 digits, including country code (e.g. +212 6 00 00 00 00).");
       return;
