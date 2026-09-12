@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 
 export const Route = createFileRoute("/_authenticated/dashboard/staff")({
@@ -94,14 +95,14 @@ function StaffPage() {
 
   return (
     <DashboardNav>
-      <h1 className="mt-6 text-2xl font-semibold text-foreground">Staff</h1>
+      <PageHeader eyebrow="Team" title="Staff" description="Link team members, assign services, and manage weekly availability." />
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
           linkStaff.mutate(email);
         }}
-        className="ui-card mt-4 flex flex-wrap gap-2 p-5"
+        className="ui-card mt-6 grid gap-3 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-6"
       >
         <input
           required
@@ -125,16 +126,16 @@ function StaffPage() {
         {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
         {staff?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No staff yet. Add your first team member above.</p>}
         {staff?.map((s) => (
-          <div key={s.id} className="ui-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
+           <div key={s.id} className="ui-card p-4 transition-colors hover:border-primary/30 sm:p-5">
+             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground">
                   {s.full_name || s.email}{" "}
                   {!s.is_active && <span className="text-muted-foreground">(inactive)</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">{s.email}</p>
               </div>
-              <div className="flex gap-2">
+               <div className="flex flex-wrap gap-2 sm:justify-end">
                 <button
                   onClick={() => setOpenStaff(openStaff === s.id ? null : s.id)}
                   className="ui-btn-secondary text-xs"

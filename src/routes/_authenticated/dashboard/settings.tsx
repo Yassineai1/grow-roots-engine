@@ -6,6 +6,7 @@ import { getPaymentSettings, savePaymentSettings } from "@/lib/payments.function
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
@@ -115,8 +116,8 @@ function SettingsPage() {
 
   return (
     <DashboardNav>
-      <div className="mt-6 space-y-8">
-        <h1 className="text-2xl font-semibold text-foreground">Booking link</h1>
+      <div className="space-y-8">
+        <PageHeader eyebrow="Share and collect" title="Booking link" description="Share your public page, manage its address, and configure booking payments." />
 
         {isLoading ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>
@@ -124,7 +125,7 @@ function SettingsPage() {
           <p className="text-sm text-muted-foreground">No business found.</p>
         ) : (
           <>
-            <section className="ui-card p-4">
+            <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Your public booking link</h2>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <code className="flex-1 overflow-x-auto rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground">
@@ -147,7 +148,7 @@ function SettingsPage() {
               </a>
             </section>
 
-            <section className="ui-card p-4">
+            <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">QR code</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Print this and put it at your front desk — scanning it opens your booking page.
@@ -163,7 +164,7 @@ function SettingsPage() {
               )}
             </section>
 
-            <section className="ui-card p-4">
+            <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Customize your link</h2>
               <form onSubmit={handleSaveSlug} className="mt-3 space-y-3">
                 <label className="block text-sm text-muted-foreground" htmlFor="slug">

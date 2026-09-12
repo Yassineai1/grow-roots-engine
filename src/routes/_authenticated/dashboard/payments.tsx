@@ -119,7 +119,7 @@ function PaymentsPage() {
                   {b ? ` · booked ${b.booking_date} ${String(b.start_time).slice(0, 5)}` : ""}
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-sm">
+               <div className="flex items-center justify-between gap-3 text-sm sm:justify-end">
                 <span className="font-medium text-foreground">
                   {formatMoney(Number(p.amount), p.currency)}
                 </span>
