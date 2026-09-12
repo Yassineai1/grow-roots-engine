@@ -24,3 +24,8 @@
 - [x] Owner-only /dashboard/business (name, description, logo, cover, primary/accent colors, phone, WhatsApp)
 - [x] Private branding storage bucket with owner-folder policies + signed URLs
 - [x] Public booking page consumes saved branding
+
+## Owner dashboard experience
+- [x] Premium responsive shell with desktop sidebar and mobile navigation
+- [x] Live overview metrics, upcoming bookings, quick actions, and booking-link access
+- [x] Consistent presentation polish across services, staff, bookings, payments, booking link, and settings

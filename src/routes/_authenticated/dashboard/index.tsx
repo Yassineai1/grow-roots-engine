@@ -57,10 +57,10 @@ function DashboardPage() {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const upcoming = useMemo(() => (overview?.bookings ?? [])
+  const allUpcoming = useMemo(() => (overview?.bookings ?? [])
     .filter((b) => `${b.booking_date}T${String(b.end_time)}` >= now.toISOString().slice(0, 19) && !["cancelled", "completed", "no_show"].includes(b.status))
-    .sort((a, b) => `${a.booking_date}${a.start_time}`.localeCompare(`${b.booking_date}${b.start_time}`))
-    .slice(0, 5), [overview?.bookings]);
+    .sort((a, b) => `${a.booking_date}${a.start_time}`.localeCompare(`${b.booking_date}${b.start_time}`)), [overview?.bookings]);
+  const upcoming = allUpcoming.slice(0, 5);
   const todayCount = overview?.bookings.filter((b) => b.booking_date === today && b.status !== "cancelled").length ?? 0;
   const paidThisMonth = overview?.payments.filter((p) => p.status === "paid" && new Date(p.created_at) >= monthStart) ?? [];
   const revenue = paidThisMonth.reduce((sum, payment) => sum + Number(payment.amount), 0);
@@ -88,7 +88,7 @@ function DashboardPage() {
         <>
           <section className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
             <MetricCard label="Bookings today" value={todayCount} icon={CalendarDays} hint="Excluding cancellations" />
-            <MetricCard label="Upcoming" value={upcoming.length} icon={ClipboardList} hint="Next scheduled bookings" />
+            <MetricCard label="Upcoming" value={allUpcoming.length} icon={ClipboardList} hint="Next scheduled bookings" />
             <MetricCard label="Active services" value={overview?.activeServices ?? 0} icon={Link2} hint="Available to clients" />
             <MetricCard label="Revenue this month" value={formatMoney(revenue, currency)} icon={CreditCard} hint="Paid transactions only" />
           </section>
