@@ -29,8 +29,8 @@ export function AssistantChat({
   onBookNow,
 }: {
   businessSlug: string;
-  businessName?: string | null;
-  onBookNow?: () => void;
+  businessName?: string | null | undefined;
+  onBookNow?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
