@@ -301,6 +301,11 @@ function BookPage() {
   const hasPaidServices = !!services?.some((s) => s.requires_payment);
   const groupClasses = services?.filter((s) => s.service_type === "group_class").length ?? 0;
   const whatsappDigits = business?.whatsapp?.replace(/[^0-9]/g, "") ?? "";
+  const waLink = (text: string) =>
+    `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(text)}`;
+  const waGeneralMessage = "Bonjour, je souhaite avoir plus d'informations sur vos services.";
+  const waServiceMessage = (serviceName: string) =>
+    `Bonjour, je suis intéressé(e) par ${serviceName} chez ${business?.name ?? "votre établissement"}. Pouvez-vous me donner plus d'informations ?`;
 
   return (
     <div
