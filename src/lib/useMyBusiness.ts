@@ -7,7 +7,7 @@ export function useMyBusiness() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("businesses")
-        .select("id, name, slug, business_type")
+        .select("id, name, slug, business_type, logo_url, brand_color, accent_color")
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
