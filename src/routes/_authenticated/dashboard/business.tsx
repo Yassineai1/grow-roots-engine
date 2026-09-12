@@ -177,7 +177,7 @@ function BusinessSettingsPage() {
         brand_color: form.brand_color || null,
         accent_color: form.accent_color || null,
         phone: form.phone.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
+        whatsapp: whatsappDigits || null,
         logo_url: form.logo_url,
         cover_image_url: form.cover_image_url,
       })
@@ -257,6 +257,10 @@ function BusinessSettingsPage() {
                     onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                     placeholder="+212 6 00 00 00 00"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Include the country code. Clients can message you on WhatsApp from your public
+                    booking page when this is set.
+                  </p>
                 </div>
               </div>
             </section>
