@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const links = [
   { to: "/dashboard/services", label: "Services", icon: BriefcaseBusiness },
   { to: "/dashboard/staff", label: "Staff", icon: Users },
   { to: "/dashboard/bookings", label: "Bookings", icon: CalendarDays },
+  { to: "/dashboard/clients", label: "Clients", icon: UserRound },
   { to: "/dashboard/payments", label: "Payments", icon: CreditCard },
   { to: "/dashboard/settings", label: "Booking link", icon: Link2 },
   { to: "/dashboard/business", label: "Settings", icon: Settings },

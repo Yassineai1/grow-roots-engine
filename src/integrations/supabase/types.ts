@@ -563,6 +563,50 @@ export type Database = {
           status: string
         }[]
       }
+      get_business_client: {
+        Args: { _client_id: string }
+        Returns: {
+          booking_count: number
+          business_id: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          notes: string
+          phone: string
+        }[]
+      }
+      get_business_client_bookings: {
+        Args: { _client_id: string }
+        Returns: {
+          booking_date: string
+          end_time: string
+          id: string
+          notes: string
+          payment_amount: number
+          payment_currency: string
+          payment_status: string
+          service_name: string
+          staff_name: string
+          start_time: string
+          status: string
+        }[]
+      }
+      get_business_clients: {
+        Args: { _business_id: string; _q?: string }
+        Returns: {
+          booking_count: number
+          email: string
+          full_name: string
+          id: string
+          last_booking_date: string
+          next_booking_date: string
+          notes: string
+          phone: string
+          status: string
+          user_id: string
+        }[]
+      }
       get_business_payment_secrets: {
         Args: { _business_id: string }
         Returns: {

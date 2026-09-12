@@ -29,3 +29,7 @@
 - [x] Premium responsive shell with desktop sidebar and mobile navigation
 - [x] Live overview metrics, upcoming bookings, quick actions, and booking-link access
 - [x] Consistent presentation polish across services, staff, bookings, payments, booking link, and settings
+
+## Clients
+- [x] Owner-only /dashboard/clients list with search (name, email, phone), booking count, last booking, status
+- [x] Client detail page with booking history and existing payment info, scoped to the owner business
