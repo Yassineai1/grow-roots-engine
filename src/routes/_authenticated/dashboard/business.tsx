@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
 import { PageHeader } from "@/components/DashboardUI";
+import { normalizeWhatsappNumber } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/business")({
   head: () => ({
