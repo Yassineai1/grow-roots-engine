@@ -848,6 +848,12 @@ function BookPage() {
           </svg>
         </a>
       )}
+
+      <AssistantChat
+        businessSlug={slug}
+        businessName={business?.name}
+        onBookNow={() => scrollTo(servicesRef)}
+      />
     </div>
   );
 }
