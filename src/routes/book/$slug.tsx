@@ -13,6 +13,7 @@ import { dispatchBookingNotifications } from "@/lib/notifications.functions";
 import { getBrandingImageUrls } from "@/lib/branding.functions";
 import { formatMoney } from "@/lib/payments/types";
 import { normalizeWhatsappNumber } from "@/lib/utils";
+import { AssistantChat } from "@/components/AssistantChat";
 
 export const Route = createFileRoute("/book/$slug")({
   ssr: false,
