@@ -162,6 +162,11 @@ function BusinessSettingsPage() {
       setError("Description must be under 1000 characters.");
       return;
     }
+    const whatsappDigits = form.whatsapp.replace(/[^0-9]/g, "");
+    if (form.whatsapp.trim() && (whatsappDigits.length < 8 || whatsappDigits.length > 15)) {
+      setError("WhatsApp number must contain 8 to 15 digits, including country code (e.g. +212 6 00 00 00 00).");
+      return;
+    }
 
     setSaving(true);
     const { error: upErr } = await supabase
@@ -172,7 +177,7 @@ function BusinessSettingsPage() {
         brand_color: form.brand_color || null,
         accent_color: form.accent_color || null,
         phone: form.phone.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
+        whatsapp: whatsappDigits || null,
         logo_url: form.logo_url,
         cover_image_url: form.cover_image_url,
       })
@@ -252,6 +257,10 @@ function BusinessSettingsPage() {
                     onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                     placeholder="+212 6 00 00 00 00"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Include the country code. Clients can message you on WhatsApp from your public
+                    booking page when this is set.
+                  </p>
                 </div>
               </div>
             </section>

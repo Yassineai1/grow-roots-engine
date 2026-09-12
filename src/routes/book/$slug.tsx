@@ -301,6 +301,11 @@ function BookPage() {
   const hasPaidServices = !!services?.some((s) => s.requires_payment);
   const groupClasses = services?.filter((s) => s.service_type === "group_class").length ?? 0;
   const whatsappDigits = business?.whatsapp?.replace(/[^0-9]/g, "") ?? "";
+  const waLink = (text: string) =>
+    `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(text)}`;
+  const waGeneralMessage = "Bonjour, je souhaite avoir plus d'informations sur vos services.";
+  const waServiceMessage = (serviceName: string) =>
+    `Bonjour, je suis intéressé(e) par ${serviceName} chez ${business?.name ?? "votre établissement"}. Pouvez-vous me donner plus d'informations ?`;
 
   return (
     <div
@@ -612,9 +617,23 @@ function BookPage() {
               <li>Time: {confirmation.time}</li>
               <li>Status: {confirmation.status}</li>
             </ul>
-            <button onClick={() => setConfirmation(null)} className="ui-btn-secondary mt-5">
-              Book another
-            </button>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <button onClick={() => setConfirmation(null)} className="ui-btn-secondary">
+                Book another
+              </button>
+              {whatsappDigits && (
+                <a
+                  href={waLink(
+                    `Bonjour, je viens de réserver ${confirmation.service} chez ${business?.name ?? "votre établissement"} le ${confirmation.date} à ${confirmation.time}.`,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ui-btn-secondary"
+                >
+                  Contacter sur WhatsApp
+                </a>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -672,6 +691,19 @@ function BookPage() {
                     >
                       {selected ? "Selected" : "Book"}
                     </button>
+                    {whatsappDigits && (
+                      <a
+                        href={waLink(waServiceMessage(s.name))}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+                          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.02c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.41 5.83c0 4.54-3.7 8.21-8.24 8.21Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.43.06-.65.31-.22.25-.85.83-.85 2.02s.87 2.34.99 2.5c.12.16 1.71 2.61 4.15 3.66.58.25 1.03.4 1.39.51.58.19 1.11.16 1.53.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z" />
+                        </svg>
+                        Contacter sur WhatsApp
+                      </a>
+                    )}
                   </article>
                 );
               })}
@@ -773,7 +805,7 @@ function BookPage() {
                   className="ui-card flex items-center justify-between gap-3 p-5 transition-colors hover:border-primary/40"
                   target="_blank"
                   rel="noreferrer"
-                  href={`https://wa.me/${whatsappDigits}`}
+                  href={waLink(waGeneralMessage)}
                 >
                   <span className="text-sm text-muted-foreground">WhatsApp</span>
                   <span className="truncate font-medium text-foreground">{business.whatsapp}</span>
@@ -804,10 +836,10 @@ function BookPage() {
       {/* Floating WhatsApp */}
       {whatsappDigits && (
         <a
-          href={`https://wa.me/${whatsappDigits}`}
+          href={waLink(waGeneralMessage)}
           target="_blank"
           rel="noreferrer"
-          aria-label="Chat on WhatsApp"
+          aria-label="Contacter sur WhatsApp"
           className="fixed bottom-5 right-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-success text-success-foreground shadow-lg transition-transform hover:scale-105"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
