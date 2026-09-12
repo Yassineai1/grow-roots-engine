@@ -37,7 +37,7 @@ function ClientsPage() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_business_clients", {
         _business_id: business!.id,
-        _q: search.trim() || undefined,
+        _q: search.trim(),
       });
       if (error) throw error;
       return data ?? [];
