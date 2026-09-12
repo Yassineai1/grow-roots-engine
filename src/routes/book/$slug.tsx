@@ -300,7 +300,7 @@ function BookPage() {
   const serviceCount = services?.length ?? 0;
   const hasPaidServices = !!services?.some((s) => s.requires_payment);
   const groupClasses = services?.filter((s) => s.service_type === "group_class").length ?? 0;
-  const whatsappDigits = business?.whatsapp?.replace(/[^0-9]/g, "") ?? "";
+  const whatsappDigits = normalizeWhatsappNumber(business?.whatsapp);
   const waLink = (text: string) =>
     `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(text)}`;
   const waGeneralMessage = "Bonjour, je souhaite avoir plus d'informations sur vos services.";
