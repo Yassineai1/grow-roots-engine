@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 
 export const Route = createFileRoute("/_authenticated/dashboard/services")({
@@ -126,11 +127,10 @@ function ServicesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <DashboardNav />
-      <h1 className="mt-6 text-2xl font-semibold text-foreground">Services</h1>
+    <DashboardNav>
+      <PageHeader eyebrow="Catalogue" title="Services" description="Create, price, and manage the services clients can book." />
 
-      <form onSubmit={onSubmit} className="ui-card mt-4 grid gap-3 p-5 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="ui-card mt-6 grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
         <input
           required
           className={input}
@@ -217,13 +217,13 @@ function ServicesPage() {
         {error && <p className="text-sm text-destructive sm:col-span-2">{error}</p>}
       </form>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-8 space-y-3">
         {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
         {services?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No services yet. Create your first service above.</p>}
         {services?.map((s) => (
           <div
             key={s.id}
-            className="flex flex-wrap items-center justify-between gap-2 ui-card p-4"
+            className="ui-card grid grid-cols-1 gap-4 p-4 transition-colors hover:border-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
           >
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -237,7 +237,7 @@ function ServicesPage() {
                 <span className="ui-badge mt-1 text-primary">Payment required</span>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 sm:justify-end">
               <button
                 onClick={() =>
                   setForm({
@@ -271,6 +271,6 @@ function ServicesPage() {
           </div>
         ))}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

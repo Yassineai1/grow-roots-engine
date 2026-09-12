@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 import {
   PAYMENT_STATUS_LABEL,
@@ -73,16 +74,15 @@ function PaymentsPage() {
   const currency = payments?.[0]?.currency ?? "MAD";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <DashboardNav />
-      <h1 className="mt-6 text-2xl font-semibold text-foreground">Payments</h1>
+    <DashboardNav>
+      <PageHeader eyebrow="Transactions" title="Payments" description="Track paid, pending, failed, and refunded booking payments." />
 
-      <section className="ui-card mt-4 flex flex-wrap gap-8 p-5">
-        <div>
+      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="ui-card p-5">
           <p className="text-xs text-muted-foreground">Revenue this month (paid only)</p>
           <p className="text-2xl font-semibold text-primary">{formatMoney(revenue, currency)}</p>
         </div>
-        <div>
+        <div className="ui-card p-5">
           <p className="text-xs text-muted-foreground">Refunded this month</p>
           <p className="text-2xl font-semibold text-muted-foreground">
             {formatMoney(refunded, currency)}
@@ -90,7 +90,7 @@ function PaymentsPage() {
         </div>
       </section>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-8 space-y-3">
         {isLoading && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -108,7 +108,7 @@ function PaymentsPage() {
           return (
             <div
               key={p.id}
-              className="flex flex-wrap items-center justify-between gap-3 ui-card p-4"
+              className="ui-card grid grid-cols-1 gap-4 p-4 transition-colors hover:border-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
             >
               <div className="text-sm">
                 <p className="font-medium text-foreground">
@@ -119,7 +119,7 @@ function PaymentsPage() {
                   {b ? ` · booked ${b.booking_date} ${String(b.start_time).slice(0, 5)}` : ""}
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-sm">
+               <div className="flex items-center justify-between gap-3 text-sm sm:justify-end">
                 <span className="font-medium text-foreground">
                   {formatMoney(Number(p.amount), p.currency)}
                 </span>
@@ -131,6 +131,6 @@ function PaymentsPage() {
           );
         })}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

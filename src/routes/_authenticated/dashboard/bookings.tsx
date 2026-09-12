@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { dispatchBookingNotifications } from "@/lib/notifications.functions";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 import { useMyBusiness } from "@/lib/useMyBusiness";
 import {
   PAYMENT_STATUS_LABEL,
@@ -96,18 +97,17 @@ function BookingsPage() {
 
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <DashboardNav />
-      <h1 className="mt-6 text-2xl font-semibold text-foreground">Bookings</h1>
+    <DashboardNav>
+      <PageHeader eyebrow="Schedule" title="Bookings" description="Review upcoming visits and keep every booking status current." />
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-6 space-y-3">
         {isLoading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</p>}
         {bookings?.length === 0 && <p className="ui-card block p-6 text-center text-sm text-muted-foreground">No bookings yet. Share your booking link to get started.</p>}
         {bookings?.map((b) => (
           <div
             key={b.id}
-            className="flex flex-wrap items-center justify-between gap-3 ui-card p-4"
+            className="ui-card grid grid-cols-1 gap-4 p-4 transition-colors hover:border-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
           >
             <div className="text-sm">
               <p className="font-medium text-foreground">
@@ -133,7 +133,7 @@ function BookingsPage() {
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 sm:justify-end">
               {(TRANSITIONS[b.status] ?? []).map((next) => (
                 <button
                   key={next}
@@ -147,6 +147,6 @@ function BookingsPage() {
           </div>
         ))}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

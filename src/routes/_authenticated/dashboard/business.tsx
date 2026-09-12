@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
+import { PageHeader } from "@/components/DashboardUI";
 
 export const Route = createFileRoute("/_authenticated/dashboard/business")({
   head: () => ({
@@ -188,10 +189,9 @@ function BusinessSettingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <DashboardNav />
-      <div className="mt-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground">Business settings</h1>
+    <DashboardNav>
+      <div className="space-y-6">
+        <PageHeader eyebrow="Business profile" title="Settings" description="Keep the information and branding on your public booking page up to date." />
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -199,7 +199,7 @@ function BusinessSettingsPage() {
           <p className="text-sm text-muted-foreground">No business found.</p>
         ) : (
           <form onSubmit={onSubmit} className="space-y-6">
-            <section className="ui-card space-y-4 p-4">
+            <section className="ui-card space-y-4 p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Business information</h2>
               <div>
                 <label className="block text-sm text-muted-foreground" htmlFor="biz-name">
@@ -256,7 +256,7 @@ function BusinessSettingsPage() {
               </div>
             </section>
 
-            <section className="ui-card space-y-4 p-4">
+            <section className="ui-card space-y-4 p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Brand colors</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -300,7 +300,7 @@ function BusinessSettingsPage() {
               </div>
             </section>
 
-            <section className="ui-card space-y-4 p-4">
+            <section className="ui-card space-y-4 p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Images</h2>
               <p className="text-xs text-muted-foreground">
                 JPG, PNG, WebP or SVG · up to 5 MB.
@@ -365,6 +365,6 @@ function BusinessSettingsPage() {
           </form>
         )}
       </div>
-    </main>
+    </DashboardNav>
   );
 }
