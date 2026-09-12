@@ -93,8 +93,7 @@ function StaffPage() {
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <DashboardNav />
+    <DashboardNav>
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Staff</h1>
 
       <form
@@ -159,7 +158,7 @@ function StaffPage() {
           </div>
         ))}
       </div>
-    </main>
+    </DashboardNav>
   );
 }
 

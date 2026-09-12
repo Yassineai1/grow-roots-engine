@@ -73,8 +73,7 @@ function PaymentsPage() {
   const currency = payments?.[0]?.currency ?? "MAD";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <DashboardNav />
+    <DashboardNav>
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Payments</h1>
 
       <section className="ui-card mt-4 flex flex-wrap gap-8 p-5">
@@ -131,6 +130,6 @@ function PaymentsPage() {
           );
         })}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

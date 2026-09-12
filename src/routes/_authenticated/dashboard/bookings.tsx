@@ -96,8 +96,7 @@ function BookingsPage() {
 
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <DashboardNav />
+    <DashboardNav>
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Bookings</h1>
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
 
@@ -147,6 +146,6 @@ function BookingsPage() {
           </div>
         ))}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

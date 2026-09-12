@@ -188,8 +188,7 @@ function BusinessSettingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <DashboardNav />
+    <DashboardNav>
       <div className="mt-6 space-y-6">
         <h1 className="text-2xl font-semibold text-foreground">Business settings</h1>
 
@@ -365,6 +364,6 @@ function BusinessSettingsPage() {
           </form>
         )}
       </div>
-    </main>
+    </DashboardNav>
   );
 }

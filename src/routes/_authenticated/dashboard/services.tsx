@@ -126,8 +126,7 @@ function ServicesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <DashboardNav />
+    <DashboardNav>
       <h1 className="mt-6 text-2xl font-semibold text-foreground">Services</h1>
 
       <form onSubmit={onSubmit} className="ui-card mt-4 grid gap-3 p-5 sm:grid-cols-2">
@@ -271,6 +270,6 @@ function ServicesPage() {
           </div>
         ))}
       </div>
-    </main>
+    </DashboardNav>
   );
 }
