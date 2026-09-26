@@ -89,6 +89,13 @@ function BookPage() {
   const bookingRef = useRef<HTMLDivElement | null>(null);
   const servicesRef = useRef<HTMLDivElement | null>(null);
   const contactRef = useRef<HTMLDivElement | null>(null);
+  const pickerRef = useRef<HTMLElement | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{
+    staffId: string;
+    staffName: string;
+    startTime: string;
+    endTime: string;
+  } | null>(null);
 
   const startCheckout = useServerFn(startBookingCheckout);
   const resolvePayment = useServerFn(resolveMockPayment);
@@ -135,7 +142,7 @@ function BookPage() {
     },
   });
 
-  const { data: slots, refetch: refetchSlots } = useQuery({
+  const { data: slots, refetch: refetchSlotsOnly } = useQuery({
     queryKey: ["slots", serviceId, date],
     enabled: !!serviceId,
     queryFn: async () => {
@@ -147,6 +154,35 @@ function BookPage() {
       return data ?? [];
     },
   });
+
+  const upcomingDays = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
+
+  const { data: dayAvailability, refetch: refetchDays } = useQuery({
+    queryKey: ["slot-days", serviceId, upcomingDays[0]],
+    enabled: !!serviceId,
+    queryFn: async () => {
+      const results = await Promise.all(
+        upcomingDays.map(async (d) => {
+          const { data } = await supabase.rpc("get_available_slots", {
+            _service_id: serviceId!,
+            _date: d,
+          });
+          return [d, (data?.length ?? 0) > 0] as const;
+        }),
+      );
+      return Object.fromEntries(results) as Record<string, boolean>;
+    },
+  });
+
+  function refetchSlots() {
+    setSelectedSlot(null);
+    void refetchSlotsOnly();
+    void refetchDays();
+  }
 
   async function book(pending: PendingBooking) {
     setError(null);
@@ -687,7 +723,12 @@ function BookPage() {
                     <button
                       onClick={() => {
                         setServiceId(s.id);
+                        setSelectedSlot(null);
                         setError(null);
+                        setTimeout(
+                          () => pickerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                          50,
+                        );
                       }}
                       className={`${selected ? "ui-btn-secondary" : "ui-btn"} mt-5 w-full`}
                     >
@@ -711,58 +752,160 @@ function BookPage() {
               })}
             </div>
 
-            {serviceId && (
-              <section className="ui-card mt-8 p-5 sm:p-6">
-                <h3 className="text-lg font-semibold text-foreground">Pick a time</h3>
-                <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:flex sm:max-w-sm">
-                  <label className="text-sm text-foreground" htmlFor="booking-date">
-                    Date
+            {serviceId && (() => {
+              const svc = services?.find((s) => s.id === serviceId);
+              const step = selectedSlot ? 4 : date ? 3 : 2;
+              const steps = ["Session", "Date", "Time", "Confirm"];
+              return (
+              <section ref={pickerRef} className="ui-card mt-8 scroll-mt-24 p-5 sm:p-6">
+                <ol className="flex flex-wrap items-center gap-2 text-xs font-medium">
+                  {steps.map((label, i) => (
+                    <li
+                      key={label}
+                      className={`ui-badge ${i + 1 <= step ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      {i + 1}. {label}
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Selected session: <span className="font-semibold text-foreground">{svc?.name}</span>
+                </p>
+
+                <h3 className="mt-5 text-lg font-semibold text-foreground">Choose a date</h3>
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                  {upcomingDays.map((d) => {
+                    const has = dayAvailability?.[d];
+                    const active = d === date;
+                    const dt = new Date(`${d}T00:00:00`);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        disabled={has === false}
+                        onClick={() => {
+                          setDate(d);
+                          setSelectedSlot(null);
+                          setError(null);
+                        }}
+                        className={`flex min-w-[64px] shrink-0 flex-col items-center rounded-lg border px-3 py-2 text-xs transition-colors disabled:opacity-40 ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        <span>{dt.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                        <span className="text-base font-semibold">{dt.getDate()}</span>
+                        <span>{dt.toLocaleDateString(undefined, { month: "short" })}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:flex sm:max-w-sm">
+                  <label className="text-xs text-muted-foreground" htmlFor="booking-date">
+                    Or pick another date
                   </label>
                   <input
                     id="booking-date"
                     type="date"
                     min={today()}
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      setSelectedSlot(null);
+                    }}
                     className={input}
                   />
                 </div>
-                {services?.find((s) => s.id === serviceId)?.requires_payment &&
-                  !paymentAvailability?.payment_configured && (
-                    <p className="mt-3 text-sm text-warning">
-                      Online payment is not yet available for this business. Please contact the
-                      business directly.
-                    </p>
+                {svc?.requires_payment && !paymentAvailability?.payment_configured && (
+                  <p className="mt-3 text-sm text-warning">
+                    Online payment is not yet available for this business. Please contact the
+                    business directly.
+                  </p>
+                )}
+
+                <h3 className="mt-6 text-lg font-semibold text-foreground">Choose a time</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {slots === undefined && (
+                    <p className="text-sm text-muted-foreground">Loading available times…</p>
                   )}
-                {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-                <div className="mt-4 flex flex-wrap gap-2">
                   {slots?.length === 0 && (
                     <p className="w-full rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                      No available slots on this day.
+                      No available times on this day. Please choose another date.
                     </p>
                   )}
-                  {slots?.map((slot) => (
+                  {slots?.map((slot) => {
+                    const active =
+                      selectedSlot?.staffId === slot.staff_id &&
+                      selectedSlot?.startTime === String(slot.start_time);
+                    return (
+                      <button
+                        key={`${slot.staff_id}-${slot.start_time}`}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          setError(null);
+                          setSelectedSlot({
+                            staffId: slot.staff_id,
+                            staffName: slot.staff_name,
+                            startTime: String(slot.start_time),
+                            endTime: String(slot.end_time),
+                          });
+                        }}
+                        className={active ? "ui-btn" : "ui-btn-secondary"}
+                      >
+                        {String(slot.start_time).slice(0, 5)} · {slot.staff_name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedSlot && svc && (
+                  <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-4">
+                    <h3 className="text-lg font-semibold text-foreground">Booking summary</h3>
+                    <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <dt className="text-muted-foreground">Session</dt>
+                      <dd className="text-foreground">{svc.name}</dd>
+                      <dt className="text-muted-foreground">Coach</dt>
+                      <dd className="text-foreground">{selectedSlot.staffName}</dd>
+                      <dt className="text-muted-foreground">Type</dt>
+                      <dd className="text-foreground">
+                        {svc.service_type === "group_class" ? "Group class" : "One-on-one"}
+                      </dd>
+                      <dt className="text-muted-foreground">Duration</dt>
+                      <dd className="text-foreground">{svc.duration_minutes} min</dd>
+                      <dt className="text-muted-foreground">Price</dt>
+                      <dd className="text-foreground">{formatMoney(Number(svc.price), "MAD")}</dd>
+                      <dt className="text-muted-foreground">Date</dt>
+                      <dd className="text-foreground">{date}</dd>
+                      <dt className="text-muted-foreground">Time</dt>
+                      <dd className="text-foreground">
+                        {selectedSlot.startTime.slice(0, 5)}–{selectedSlot.endTime.slice(0, 5)}
+                      </dd>
+                    </dl>
                     <button
-                      key={`${slot.staff_id}-${slot.start_time}`}
-                      disabled={busy}
+                      type="button"
+                      disabled={busy || !date || !selectedSlot}
                       onClick={() =>
                         book({
                           slug,
                           serviceId,
-                          staffId: slot.staff_id,
+                          staffId: selectedSlot.staffId,
                           date,
-                          startTime: String(slot.start_time),
-                          endTime: String(slot.end_time),
+                          startTime: selectedSlot.startTime,
+                          endTime: selectedSlot.endTime,
                         })
                       }
-                      className="ui-btn-secondary"
+                      className="ui-btn mt-4 w-full"
                     >
-                      {String(slot.start_time).slice(0, 5)} · {slot.staff_name}
+                      {busy ? "Booking…" : "Confirm reservation"}
                     </button>
-                  ))}
-                </div>
+                  </div>
+                )}
+                {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
               </section>
-            )}
+              );
+            })()}
           </>
         )}
       </section>
