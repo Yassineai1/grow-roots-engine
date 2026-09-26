@@ -341,9 +341,10 @@ function BookPage() {
   const whatsappDigits = normalizeWhatsappNumber(business?.whatsapp);
   const waLink = (text: string) =>
     `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(text)}`;
-  const waGeneralMessage = "Bonjour, je souhaite avoir plus d'informations sur vos services.";
+  const waGeneralMessage =
+    "Bonjour, je suis intéressé(e) par vos services et je souhaiterais avoir plus d'informations concernant vos prestations, notamment les tarifs, les durées et les disponibilités. Merci.";
   const waServiceMessage = (serviceName: string) =>
-    `Bonjour, je suis intéressé(e) par ${serviceName} chez ${business?.name ?? "votre établissement"}. Pouvez-vous me donner plus d'informations ?`;
+    `Bonjour, je suis intéressé(e) par vos services et je souhaiterais avoir plus d'informations concernant ${serviceName}, notamment le tarif, la durée et les disponibilités. Merci.`;
 
   return (
     <div
