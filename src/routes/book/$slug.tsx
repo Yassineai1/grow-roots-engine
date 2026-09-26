@@ -662,9 +662,7 @@ function BookPage() {
               </button>
               {whatsappDigits && (
                 <a
-                  href={waLink(
-                    `Bonjour, je viens de réserver ${confirmation.service} chez ${business?.name ?? "votre établissement"} le ${confirmation.date} à ${confirmation.time}.`,
-                  )}
+                  href={waLink(waServiceMessage(confirmation.service))}
                   target="_blank"
                   rel="noreferrer"
                   className="ui-btn-secondary"
