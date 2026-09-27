@@ -91,7 +91,7 @@ export function renderBookingEmail(type: BookingEmailType, p: BookingEmailPayloa
 
 const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend/emails";
 // Resend test sender until getfitlyapp.com is verified in the Resend account.
-const FROM_EMAIL = "Fitly <onboarding@resend.dev>";
+const FROM_EMAIL = "Fitly <notifications@getfitlyapp.com>";
 
 /**
  * Sends one booking email through Resend (via the connector gateway).
