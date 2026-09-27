@@ -7,8 +7,8 @@
  *
  * Delivery goes through Resend (via the connector gateway). Credentials are
  * read from `process.env` inside this server-only module and never reach the
- * client. The sender uses Resend's test address until getfitlyapp.com is
- * verified in the Resend account — then switch FROM_EMAIL below.
+ * client. The verified sender domain is getfitlyapp.com (Resend), with the
+ * central FROM_EMAIL constant below used by every booking email.
  */
 
 export type BookingEmailType =
@@ -91,7 +91,7 @@ export function renderBookingEmail(type: BookingEmailType, p: BookingEmailPayloa
 
 const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend/emails";
 // Resend test sender until getfitlyapp.com is verified in the Resend account.
-const FROM_EMAIL = "Fitly <onboarding@resend.dev>";
+const FROM_EMAIL = "Fitly <notifications@getfitlyapp.com>";
 
 /**
  * Sends one booking email through Resend (via the connector gateway).
