@@ -5,11 +5,10 @@
  * (one row per booking + event type, so refreshes or repeated frontend
  * requests can never produce a duplicate). This module drains that queue.
  *
- * NOTE: no transactional email provider is connected to this project yet.
- * `sendBookingEmail` therefore renders the real message and logs it instead of
- * delivering it. See the marked TODO below for the single place where the
- * provider API call must be wired in. Provider credentials must be read from
- * `process.env` inside this server-only module and never reach the client.
+ * Delivery goes through Resend (via the connector gateway). Credentials are
+ * read from `process.env` inside this server-only module and never reach the
+ * client. The sender uses Resend's test address until getfitlyapp.com is
+ * verified in the Resend account — then switch FROM_EMAIL below.
  */
 
 export type BookingEmailType =
@@ -76,32 +75,48 @@ export function renderBookingEmail(type: BookingEmailType, p: BookingEmailPayloa
   }
 }
 
+const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend/emails";
+// Resend test sender until getfitlyapp.com is verified in the Resend account.
+const FROM_EMAIL = "Fitly <onboarding@resend.dev>";
+
 /**
- * Sends one booking email.
- *
- * TODO(email-provider): connect the real transactional email provider here.
- * Replace the log below with the provider API call, e.g.
- *   await fetch(providerEndpoint, { headers: { Authorization: `Bearer ${process.env['EMAIL_API_KEY']}` }, ... })
- * Throw on failure so the outbox row is retried instead of marked sent.
+ * Sends one booking email through Resend (via the connector gateway).
+ * Throws on failure so the outbox row is retried instead of marked sent.
  */
 export async function sendBookingEmail(
   type: BookingEmailType,
   email: { to: string; subject: string; payload: BookingEmailPayload },
 ): Promise<{ delivered: boolean }> {
+  const lovableApiKey = process.env["LOVABLE_API_KEY"];
+  const resendApiKey = process.env["RESEND_API_KEY"];
+  if (!lovableApiKey || !resendApiKey) {
+    throw new Error("Email credentials are not configured (LOVABLE_API_KEY / RESEND_API_KEY).");
+  }
+
   const body = renderBookingEmail(type, email.payload);
-  console.log(
-    [
-      "──────── BOOKING EMAIL ────────",
-      `event:     ${type}`,
-      `to:        ${email.to}`,
-      `subject:   ${email.subject}`,
-      "body:",
-      body,
-      "status:    NOT DELIVERED — no transactional email provider is connected.",
-      "───────────────────────────────",
-    ].join("\n"),
-  );
-  return { delivered: false };
+  const response = await fetch(RESEND_GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${lovableApiKey}`,
+      "X-Connection-Api-Key": resendApiKey,
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [email.to],
+      subject: email.subject,
+      text: body,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(`[booking-email] Resend send failed [${response.status}]: ${errorBody}`);
+    throw new Error(`Resend send failed [${response.status}]: ${errorBody}`);
+  }
+
+  console.log(`[booking-email] sent ${type} to ${email.to}`);
+  return { delivered: true };
 }
 
 
