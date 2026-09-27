@@ -5,11 +5,10 @@
  * (one row per booking + event type, so refreshes or repeated frontend
  * requests can never produce a duplicate). This module drains that queue.
  *
- * NOTE: no transactional email provider is connected to this project yet.
- * `sendBookingEmail` therefore renders the real message and logs it instead of
- * delivering it. See the marked TODO below for the single place where the
- * provider API call must be wired in. Provider credentials must be read from
- * `process.env` inside this server-only module and never reach the client.
+ * Delivery goes through Resend (via the connector gateway). Credentials are
+ * read from `process.env` inside this server-only module and never reach the
+ * client. The sender uses Resend's test address until getfitlyapp.com is
+ * verified in the Resend account — then switch FROM_EMAIL below.
  */
 
 export type BookingEmailType =
