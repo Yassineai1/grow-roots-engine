@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790471660282,
+      "tag": "0000_booking_reminders",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790471705513,
+      "tag": "0001_enable_cron_net",
+      "breakpoints": true
+    }
+  ]
+}

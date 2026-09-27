@@ -14,7 +14,8 @@
 export type BookingEmailType =
   | "booking_confirmed_client"
   | "booking_created_owner"
-  | "booking_cancelled_owner";
+  | "booking_cancelled_owner"
+  | "booking_reminder_client";
 
 export type BookingEmailPayload = {
   business_name?: string | null;
@@ -72,6 +73,19 @@ export function renderBookingEmail(type: BookingEmailType, p: BookingEmailPayloa
         `Service: ${p.service_name ?? ""}`,
         `When: ${whenLine(p)}`.concat(staff),
       ].join("\n");
+    case "booking_reminder_client":
+      return [
+        `Hi ${p.client_name ?? "there"},`,
+        ``,
+        `This is a reminder that your booking at ${p.business_name ?? "the business"} is tomorrow.`,
+        ``,
+        `Business: ${p.business_name ?? ""}`,
+        `Service: ${p.service_name ?? ""}`,
+        `Date: ${p.booking_date ?? ""}`,
+        `Time: ${hhmm(p.start_time)}–${hhmm(p.end_time)}`.concat(staff),
+        ``,
+        `Need to change plans? You can view or cancel this booking from Fitly (cancellations are allowed up to 2 hours before the start time): ${APP_URL}/my-bookings`,
+      ].join("\n");
   }
 }
 
@@ -126,7 +140,7 @@ export async function dispatchPendingBookingEmails(limit = 20) {
 
   const { data: rows } = await supabaseAdmin
     .from("notification_outbox")
-    .select("id, event_type, recipient_email, subject, payload, attempts")
+    .select("id, event_type, booking_id, recipient_email, subject, payload, attempts")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .limit(limit);
@@ -145,6 +159,23 @@ export async function dispatchPendingBookingEmails(limit = 20) {
     if (!claimed || claimed.length === 0) continue;
 
 
+    // Reminders: re-check the booking right before sending so a booking that was
+    // cancelled or already reminded never gets an email.
+    if (row.event_type === "booking_reminder_client") {
+      const { data: b } = await supabaseAdmin
+        .from("bookings")
+        .select("status, reminder_sent")
+        .eq("id", row.booking_id)
+        .maybeSingle();
+      if (!b || b.status !== "confirmed" || b.reminder_sent) {
+        await supabaseAdmin
+          .from("notification_outbox")
+          .update({ status: "failed", last_error: "Skipped — booking no longer eligible for a reminder." })
+          .eq("id", row.id);
+        continue;
+      }
+    }
+
     try {
       const result = await sendBookingEmail(row.event_type as BookingEmailType, {
         to: row.recipient_email,
@@ -160,6 +191,9 @@ export async function dispatchPendingBookingEmails(limit = 20) {
             : { status: "failed", last_error: "No email provider configured — logged only." },
         )
         .eq("id", row.id);
+      if (result.delivered && row.event_type === "booking_reminder_client") {
+        await supabaseAdmin.from("bookings").update({ reminder_sent: true }).eq("id", row.booking_id);
+      }
       processed += 1;
     } catch (e) {
       await supabaseAdmin
@@ -169,4 +203,14 @@ export async function dispatchPendingBookingEmails(limit = 20) {
     }
   }
   return { processed };
+}
+
+/** Queues reminders for confirmed bookings starting in ~24h, then sends pending emails. */
+export async function runBookingReminders() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: queued, error } = await supabaseAdmin.rpc("queue_booking_reminders");
+  if (error) throw new Error(error.message);
+  const { processed } = await dispatchPendingBookingEmails(50);
+  console.log(`[booking-reminders] queued ${queued ?? 0}, processed ${processed}`);
+  return { queued: queued ?? 0, processed };
 }

@@ -59,6 +59,7 @@ export type Database = {
           hold_expires_at: string | null
           id: string
           notes: string | null
+          reminder_sent: boolean
           service_id: string
           staff_id: string
           start_time: string
@@ -73,6 +74,7 @@ export type Database = {
           hold_expires_at?: string | null
           id?: string
           notes?: string | null
+          reminder_sent?: boolean
           service_id: string
           staff_id: string
           start_time: string
@@ -87,6 +89,7 @@ export type Database = {
           hold_expires_at?: string | null
           id?: string
           notes?: string | null
+          reminder_sent?: boolean
           service_id?: string
           staff_id?: string
           start_time?: string
@@ -691,6 +694,7 @@ export type Database = {
           service_type: string
         }[]
       }
+      queue_booking_reminders: { Args: never; Returns: number }
       search_public_businesses: {
         Args: { _q: string }
         Returns: {
