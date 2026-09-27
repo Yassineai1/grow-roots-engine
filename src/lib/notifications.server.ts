@@ -7,8 +7,8 @@
  *
  * Delivery goes through Resend (via the connector gateway). Credentials are
  * read from `process.env` inside this server-only module and never reach the
- * client. The sender uses Resend's test address until getfitlyapp.com is
- * verified in the Resend account — then switch FROM_EMAIL below.
+ * client. The verified sender domain is getfitlyapp.com (Resend), with the
+ * central FROM_EMAIL constant below used by every booking email.
  */
 
 export type BookingEmailType =
