@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PaymentConfigStatus, PaymentMode } from "@/lib/payments/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const HOLD_MINUTES = 15;
 
@@ -28,7 +29,7 @@ async function loadConfig(businessId: string) {
   };
 }
 
-async function assertOwner(supabase: any, businessId: string) {
+async function assertOwner(supabase: SupabaseClient, businessId: string) {
   const { data } = await supabase.from("businesses").select("id").eq("id", businessId).maybeSingle();
   if (!data) throw new Error("Business not found.");
 }
