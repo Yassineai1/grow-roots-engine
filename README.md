@@ -1,144 +1,176 @@
-# fitly
+# Grow Roots Engine
 
-Build the backend foundation for a multi-tenant business management SaaS platform (for gyms, fitness studios, and coaches). Do NOT build any booking, payment, or chatbot features yet — this prompt is ONLY for the database schema, authentication, and role-based access.
+A multi-tenant booking & business management SaaS starter kit for gyms, fitness studios, and independent coaches. Built with TanStack Start, Supabase, and Tailwind CSS.
 
-1. Enable Lovable Cloud (built-in Supabase backend).
+> **Status**: Functional MVP. Payments run in **Mock/Test mode only** — no real payment provider is integrated. See [Known Limitations](#known-limitations).
 
-2. Create these database tables with the exact fields below:
+## What's Inside
 
-businesses
+- **Authentication** — email/password signup, login, password reset
+- **Role-based access** — Platform Admin, Business Owner, Staff, Client
+- **Multi-tenant businesses** — each business has its own branding, services, staff, and clients (isolated via Supabase RLS)
+- **Services management** — one-on-one sessions and group classes with capacity
+- **Staff management** — availability per staff member, services linked to staff
+- **Public booking page** — per-business slug-based page with services, staff, and contact info
+- **Booking engine** — slot availability, double-booking prevention, group capacity enforcement (advisory lock + validation function)
+- **Client self-service** — view and cancel bookings, edit profile
+- **Owner dashboard** — bookings today, upcoming, active services, revenue this month
+- **Client CRM** — list, search, filter, view totals per client
+- **Notifications** — Resend-powered email confirmations, owner alerts, 24-hour reminders (cron)
+- **Payment abstraction** — provider-agnostic layer with a Mock/Test provider
 
-id (uuid, primary key)
+## Tech Stack
 
-owner_id (uuid, references users)
+| Layer | Technology |
+|---|---|
+| Framework | TanStack Start |
+| UI | React 19 + Tailwind CSS 4 |
+| Routing | TanStack Router |
+| Data | TanStack Query |
+| Backend | Supabase (Postgres, Auth, Storage, Edge Functions) |
+| ORM | Drizzle ORM + drizzle-kit |
+| Validation | Zod |
+| Forms | react-hook-form |
+| Email | Resend |
+| Build | Vite |
 
-name (text)
+## Requirements
 
-business_type (text)
+- Node.js 20+
+- npm (or pnpm / yarn)
+- A Supabase project (free tier works)
+- A Resend account (free tier works)
 
-slug (text, unique)
+## Quick Start
 
-logo_url (text, nullable)
+### 1. Clone & install
 
-brand_color (text, nullable)
+    git clone <your-repo-url> grow-roots-engine
+    cd grow-roots-engine
+    npm install
 
-settings (jsonb, default empty object)
+### 2. Configure environment
 
-subscription_status (text, default 'trial')
+    cp .env.example .env
 
-language_default (text, default 'ar')
+Fill in the values in `.env` (see Environment Variables below).
 
-created_at (timestamptz, default now)
+### 3. Apply database migrations
 
-users (extend Supabase auth users with a profile table)
+Run the SQL files in `supabase/migrations/` against your Supabase project. Two options:
 
-id (uuid, primary key, references auth.users)
+- Paste them in order into the Supabase SQL editor, or
+- Use the Supabase CLI:
 
-email (text)
+    supabase link --project-ref <your-project-ref>
+    supabase db push
 
-full_name (text)
+### 4. Run locally
 
-role (text) — must be one of: 'platform_admin', 'business_owner', 'staff', 'client'
+    npm run dev
 
-phone (text, nullable)
+App runs at http://localhost:5173.
 
-preferred_language (text, default 'ar')
+## Environment Variables
 
-created_at (timestamptz, default now)
+See `.env.example` for the full list.
 
-staff
+### Supabase (public — safe in browser)
 
-id (uuid, primary key)
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_PROJECT_ID` | Your Supabase project reference |
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Public anon/publishable key |
+| `VITE_SUPABASE_*` | Same values exposed to the Vite client |
 
-business_id (uuid, references businesses)
+### Secrets (server-only — never expose client-side)
 
-user_id (uuid, references users)
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side admin access — bypasses RLS |
+| `LOVABLE_CRON_SECRET` | Bearer token protecting the booking-reminders cron endpoint |
+| `LOVABLE_CRON_SECRET_PREVIOUS` | Optional — for rotating the cron secret without downtime |
+| `RESEND_API_KEY` | Send transactional emails |
+| `LOVABLE_API_KEY` | Optional — AI assistant integration |
+| `LOVABLE_DB_MIGRATION_URL` | Postgres connection string used by Drizzle migrations |
 
-specialties (text array, nullable)
+## Database
 
-bio (text, nullable)
+The schema lives in **`supabase/migrations/`** as ordered SQL migrations — **not** in `drizzle/schema.ts` (which is intentionally empty).
 
-is_active (boolean, default true)
+`drizzle.config.ts` points to `LOVABLE_DB_MIGRATION_URL` and can be used to run migration tooling. Supabase migrations are the source of truth.
 
-created_at (timestamptz, default now)
+### RLS & multi-tenant isolation
 
-clients
+Row Level Security is enforced on all tenant-scoped tables. Helper functions in `app_private` (`is_platform_admin`, `owns_business`, `is_own_client`) gate access. Cross-tenant isolation was audited at the SQL level.
 
-id (uuid, primary key)
+## Deployment
 
-business_id (uuid, references businesses)
+The build targets Cloudflare Workers via Nitro:
 
-user_id (uuid, references users, nullable)
+    npm run build
+    npm run preview
 
-notes (text, nullable)
+See TanStack Start + Nitro docs for deployment specifics (Cloudflare, Vercel, Node).
 
-created_at (timestamptz, default now)
+### Cron scheduler
 
-3. Authentication requirements:
+The booking-reminders endpoint requires:
 
-Email/password signup and login
+    Authorization: Bearer <LOVABLE_CRON_SECRET>
 
-After signup, automatically create a row in the users profile table
+If your scheduler sends an `apikey` header instead, reminders will fail with 401.
 
-Default role on signup = 'business_owner' (for now — we will add client/staff signup flows later)
+## Known Limitations
 
-Add a working logout button
+Honest, current limitations — not future promises:
 
-Add route protection: unauthenticated users cannot access any dashboard page
+- **Payments are Mock/Test only.** No real payment provider (Stripe, CMI, etc.) is integrated or tested.
+- **Multilingual UI is not implemented.** The schema has `preferred_language`, but the UI is English-only.
+- **Timezone handling** is not fully verified across DST or cross-region bookings.
+- **No automated test suite.** Type checking and production build pass; runtime smoke tests are manual.
+- **Full ESLint is not clean** — one error in a generated file plus warnings. Not a release blocker.
+- **Client bundle** is ~560 KB (~163 KB gzip), above Vite's 500 KB warning threshold.
+- **AI assistant and WhatsApp integrations** are intentionally out of scope.
 
-4. Row Level Security (RLS) — apply these rules:
+## Project Structure
 
-A business_owner can only read/write rows in businesses, staff, and clients where business_id matches a business they own
+    src/
+      lib/                    # Server functions, business logic
+        payments/             # Provider abstraction (Mock/Test)
+        notifications.*       # Resend email helpers
+        *.functions.ts        # Server functions
+      routes/                 # File-based routing (TanStack Router)
+        _authenticated/       # Owner/staff dashboard routes
+        book/$slug.tsx        # Public booking page
+        login.tsx, signup.tsx, ...
+        __root.tsx
+      integrations/supabase/  # Supabase client setup
 
-A platform_admin can read all rows in all tables
+    supabase/
+      config.toml
+      migrations/             # 19 SQL migrations (source of truth)
 
-Regular authenticated users with no business cannot see any business data
+    drizzle/
+      schema.ts               # Auto-generated, intentionally blank
+      migrations/
 
-5. Build ONLY these pages for now:
+## License
 
-/signup — signup form (email, password, full name)
+This software is sold under a **Single-Use Commercial License**. See [LICENSE.md](./LICENSE.md) for full terms.
 
-/login — login form
+In short: you may use the code in one end product (personal or commercial). You may not resell it as a template.
 
-/onboarding — after signup, a simple form to create their first business (name, business_type dropdown with options: "Gym", "Studio", "Coaching")
+## Support
 
-/dashboard — a blank protected page that just shows "Welcome, [business name]" after login, to confirm auth + business creation works
+Support is provided via email for setup-related questions. Scope and duration are defined on the product page (Gumroad / LemonSqueezy).
 
-✅ Acceptance Criteria (Definition of Done):
+For issues, include:
+- The exact error message
+- Steps to reproduce
+- Your environment (Node version, OS)
 
- I can sign up with email/password
+---
 
- After signup, I land on /onboarding and can create a business
-
- After creating a business, I land on /dashboard and see the business name
-
- I can log out and log back in, and still see my business
-
- If I open the app in an incognito window without logging in, I am redirected to /login
-
- All 4 tables exist in the database with the exact fields listed above
-
-Do not add any other pages, features, or UI beyond what is listed above. Keep the design simple and clean — we will build the full design system in the next phase.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://grow-roots-engine.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/325a9bc5-9c83-4db9-a2b4-fa9b804ba908).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+**Version**: 0.1.0 — Pre-release.
