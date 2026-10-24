@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getPaymentSettings, savePaymentSettings } from "@/lib/payments.functions";
+import { getPaymentSettings, savePaymentSettings, saveStripeSettings } from "@/lib/payments.functions";
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/DashboardNav";
@@ -13,15 +13,9 @@ export const Route = createFileRoute("/_authenticated/dashboard/settings")({
   head: () => ({
     meta: [
       { title: "Booking link & settings | Fitly" },
-      {
-        name: "description",
-        content: "Share your public booking link, copy it, print its QR code, and customize your booking slug.",
-      },
+      { name: "description", content: "Share your public booking link, copy it, print its QR code, and customize your booking slug." },
       { property: "og:title", content: "Booking link & settings | Fitly" },
-      {
-        property: "og:description",
-        content: "Share your public booking link, copy it, print its QR code, and customize your booking slug.",
-      },
+      { property: "og:description", content: "Share your public booking link, copy it, print its QR code, and customize your booking slug." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -43,13 +37,8 @@ function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  useEffect(() => {
-    if (business?.slug) setSlug(business.slug);
-  }, [business?.slug]);
+  useEffect(() => { setOrigin(window.location.origin); }, []);
+  useEffect(() => { if (business?.slug) setSlug(business.slug); }, [business?.slug]);
 
   const bookingUrl = business?.slug && origin ? `${origin}/book/${business.slug}` : "";
 
@@ -57,13 +46,9 @@ function SettingsPage() {
     if (!bookingUrl) return;
     let active = true;
     QRCode.toDataURL(bookingUrl, { width: 512, margin: 1 })
-      .then((url) => {
-        if (active) setQr(url);
-      })
+      .then((url) => { if (active) setQr(url); })
       .catch(() => setQr(null));
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [bookingUrl]);
 
   async function handleCopy() {
@@ -84,21 +69,13 @@ function SettingsPage() {
 
     const next = slug.trim().toLowerCase();
     if (!SLUG_RE.test(next)) {
-      setError(
-        "Use lowercase letters, numbers and hyphens only — no spaces, and no leading or trailing hyphen.",
-      );
+      setError("Use lowercase letters, numbers and hyphens only — no spaces, and no leading or trailing hyphen.");
       return;
     }
-    if (next === business.slug) {
-      setSaved(true);
-      return;
-    }
+    if (next === business.slug) { setSaved(true); return; }
 
     setSaving(true);
-    const { error: updateError } = await supabase
-      .from("businesses")
-      .update({ slug: next })
-      .eq("id", business.id);
+    const { error: updateError } = await supabase.from("businesses").update({ slug: next }).eq("id", business.id);
     setSaving(false);
 
     if (updateError) {
@@ -109,7 +86,6 @@ function SettingsPage() {
       }
       return;
     }
-
     setSaved(true);
     await queryClient.invalidateQueries({ queryKey: ["my-business"] });
   }
@@ -128,70 +104,26 @@ function SettingsPage() {
             <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Your public booking link</h2>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground">
-                  {bookingUrl || "..."}
-                </code>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  disabled={!bookingUrl}
-                  className="ui-btn"
-                >
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
+                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground">{bookingUrl || "..."}</code>
+                <button type="button" onClick={handleCopy} disabled={!bookingUrl} className="ui-btn">{copied ? "Copied!" : "Copy link"}</button>
               </div>
-              <a
-                href={`/book/${business.slug}`}
-                className="mt-3 inline-block text-sm text-muted-foreground underline"
-              >
-                Open booking page
-              </a>
+              <a href={`/book/${business.slug}`} className="mt-3 inline-block text-sm text-muted-foreground underline">Open booking page</a>
             </section>
 
             <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">QR code</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Print this and put it at your front desk — scanning it opens your booking page.
-              </p>
-              {qr ? (
-                <img
-                  src={qr}
-                  alt={`QR code linking to ${bookingUrl}`}
-                  className="mt-4 h-48 w-48 rounded-lg border border-border bg-foreground p-2"
-                />
-              ) : (
-                <p className="mt-4 text-sm text-muted-foreground">Generating QR code...</p>
-              )}
+              <p className="mt-1 text-sm text-muted-foreground">Print this and put it at your front desk — scanning it opens your booking page.</p>
+              {qr ? (<img src={qr} alt={`QR code linking to ${bookingUrl}`} className="mt-4 h-48 w-48 rounded-lg border border-border bg-foreground p-2" />) : (<p className="mt-4 text-sm text-muted-foreground">Generating QR code...</p>)}
             </section>
 
             <section className="ui-card p-5 sm:p-6">
               <h2 className="text-sm font-medium text-foreground">Customize your link</h2>
               <form onSubmit={handleSaveSlug} className="mt-3 space-y-3">
-                <label className="block text-sm text-muted-foreground" htmlFor="slug">
-                  {origin}/book/
-                </label>
-                <input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlug(e.target.value);
-                    setError(null);
-                    setSaved(false);
-                  }}
-                  className="ui-input"
-                  placeholder="my-gym"
-                />
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="ui-btn"
-                >
-                  {saving ? "Saving..." : "Save link"}
-                </button>
+                <label className="block text-sm text-muted-foreground" htmlFor="slug">{origin}/book/</label>
+                <input id="slug" value={slug} onChange={(e) => { setSlug(e.target.value); setError(null); setSaved(false); }} className="ui-input" placeholder="my-gym" />
+                <button type="submit" disabled={saving} className="ui-btn">{saving ? "Saving..." : "Save link"}</button>
                 {error && <p className="text-sm text-destructive">{error}</p>}
-                {saved && !error && (
-                  <p className="text-sm text-muted-foreground">Booking link updated.</p>
-                )}
+                {saved && !error && (<p className="text-sm text-muted-foreground">Booking link updated.</p>)}
               </form>
             </section>
 
@@ -211,11 +143,21 @@ const STATUS_LABEL: Record<string, string> = {
 
 function PaymentSettings({ businessId }: { businessId: string }) {
   const load = useServerFn(getPaymentSettings);
-  const save = useServerFn(savePaymentSettings);
+  const saveCmi = useServerFn(savePaymentSettings);
+  const saveStripe = useServerFn(saveStripeSettings);
   const qc = useQueryClient();
 
+  const [provider, setProvider] = useState<"cmi" | "stripe">("cmi");
+  
+  // CMI state
   const [merchantId, setMerchantId] = useState("");
   const [storeKey, setStoreKey] = useState("");
+  
+  // Stripe state
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [stripeWebhookSecret, setStripeWebhookSecret] = useState("");
+
   const [mode, setMode] = useState<"test" | "live">("test");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -227,21 +169,26 @@ function PaymentSettings({ businessId }: { businessId: string }) {
 
   useEffect(() => {
     if (settings?.mode) setMode(settings.mode);
-  }, [settings?.mode]);
+    if (settings?.provider === "stripe" || settings?.provider === "cmi") {
+      setProvider(settings.provider);
+    }
+  }, [settings]);
 
   const mutation = useMutation({
-    mutationFn: () => save({ data: { businessId, merchantId, storeKey, mode } }),
+    mutationFn: () => {
+      if (provider === "cmi") {
+        return saveCmi({ data: { businessId, merchantId, storeKey, mode } });
+      } else {
+        return saveStripe({ data: { businessId, secretKey: stripeSecretKey, publishableKey: stripePublishableKey, webhookSecret: stripeWebhookSecret, mode } });
+      }
+    },
     onSuccess: async () => {
-      setStoreKey("");
-      setMerchantId("");
-      setError(null);
-      setMessage("Payment settings saved.");
+      setStoreKey(""); setMerchantId("");
+      setStripeSecretKey(""); setStripePublishableKey(""); setStripeWebhookSecret("");
+      setError(null); setMessage("Payment settings saved.");
       await qc.invalidateQueries({ queryKey: ["payment-settings", businessId] });
     },
-    onError: (e: Error) => {
-      setMessage(null);
-      setError(e.message);
-    },
+    onError: (e: Error) => { setMessage(null); setError(e.message); },
   });
 
   const status = settings?.status ?? "not_configured";
@@ -250,7 +197,7 @@ function PaymentSettings({ businessId }: { businessId: string }) {
     <section className="ui-card p-4">
       <h2 className="text-sm font-medium text-foreground">Payment settings</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Payment provider: CMI · Status:{" "}
+        Status:{" "}
         <span className={status === "not_configured" ? "text-warning" : "text-success"}>
           {STATUS_LABEL[status]}
         </span>
@@ -258,59 +205,56 @@ function PaymentSettings({ businessId }: { businessId: string }) {
       {isLoading ? (
         <p className="mt-3 text-sm text-muted-foreground">Loading...</p>
       ) : (
-        <form
-          className="mt-3 space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            mutation.mutate();
-          }}
-        >
+        <form className="mt-3 space-y-3" onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}>
+          
           <div>
-            <label className="block text-sm text-muted-foreground" htmlFor="merchant">
-              CMI Merchant ID {settings?.merchantIdMasked && `(saved: ${settings.merchantIdMasked})`}
-            </label>
-            <input
-              id="merchant"
-              className="ui-input"
-              value={merchantId}
-              onChange={(e) => setMerchantId(e.target.value)}
-              placeholder={settings?.merchantIdMasked ? "Leave blank to keep current" : "Merchant ID"}
-            />
+            <label className="block text-sm text-muted-foreground" htmlFor="provider">Payment Provider</label>
+            <select id="provider" className="ui-input mb-3" value={provider} onChange={(e) => { setProvider(e.target.value as "cmi" | "stripe"); setMessage(null); setError(null); }}>
+              <option value="cmi">CMI (Morocco)</option>
+              <option value="stripe">Stripe (Global)</option>
+            </select>
           </div>
+
+          {provider === "cmi" ? (
+            <>
+              <div>
+                <label className="block text-sm text-muted-foreground" htmlFor="merchant">CMI Merchant ID {settings?.merchantIdMasked && `(saved: ${settings.merchantIdMasked})`}</label>
+                <input id="merchant" className="ui-input" value={merchantId} onChange={(e) => setMerchantId(e.target.value)} placeholder={settings?.merchantIdMasked ? "Leave blank to keep current" : "Merchant ID"} />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground" htmlFor="storekey">CMI Store Key {settings?.storeKeySet && "(saved — hidden for security)"}</label>
+                <input id="storekey" type="password" autoComplete="new-password" className="ui-input" value={storeKey} onChange={(e) => setStoreKey(e.target.value)} placeholder={settings?.storeKeySet ? "Leave blank to keep current" : "Store key"} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm text-muted-foreground" htmlFor="stripeSecret">Stripe Secret Key {settings?.stripeSecretKeySet && "(saved — hidden for security)"}</label>
+                <input id="stripeSecret" type="password" autoComplete="new-password" className="ui-input" value={stripeSecretKey} onChange={(e) => setStripeSecretKey(e.target.value)} placeholder={settings?.stripeSecretKeySet ? "Leave blank to keep current" : "sk_test_..."} />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground" htmlFor="stripePublishable">Stripe Publishable Key</label>
+                <input id="stripePublishable" className="ui-input" value={stripePublishableKey} onChange={(e) => setStripePublishableKey(e.target.value)} placeholder={settings?.stripePublishableKey || "pk_test_..."} />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground" htmlFor="stripeWebhook">Stripe Webhook Secret {settings?.stripeWebhookSecretSet && "(saved — hidden for security)"}</label>
+                <input id="stripeWebhook" type="password" autoComplete="new-password" className="ui-input" value={stripeWebhookSecret} onChange={(e) => setStripeWebhookSecret(e.target.value)} placeholder={settings?.stripeWebhookSecretSet ? "Leave blank to keep current" : "whsec_..."} />
+              </div>
+            </>
+          )}
+
           <div>
-            <label className="block text-sm text-muted-foreground" htmlFor="storekey">
-              CMI Store Key {settings?.storeKeySet && "(saved — hidden for security)"}
-            </label>
-            <input
-              id="storekey"
-              type="password"
-              autoComplete="new-password"
-              className="ui-input"
-              value={storeKey}
-              onChange={(e) => setStoreKey(e.target.value)}
-              placeholder={settings?.storeKeySet ? "Leave blank to keep current" : "Store key"}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              The store key is stored securely on the server and is never shown again.
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm text-muted-foreground" htmlFor="mode">
-              Mode
-            </label>
-            <select
-              id="mode"
-              className="ui-input"
-              value={mode}
-              onChange={(e) => setMode(e.target.value as "test" | "live")}
-            >
+            <label className="block text-sm text-muted-foreground" htmlFor="mode">Mode</label>
+            <select id="mode" className="ui-input" value={mode} onChange={(e) => setMode(e.target.value as "test" | "live")}>
               <option value="test">Test</option>
               <option value="live">Live</option>
             </select>
           </div>
+          
           <button type="submit" disabled={mutation.isPending} className="ui-btn">
             {mutation.isPending ? "Saving..." : "Save payment settings"}
           </button>
+          
           {error && <p className="text-sm text-destructive">{error}</p>}
           {message && !error && <p className="text-sm text-muted-foreground">{message}</p>}
         </form>

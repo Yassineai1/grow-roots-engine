@@ -10,7 +10,7 @@ export type PaymentStatus =
   | "refunded"
   | "partially_refunded";
 
-export type PaymentProviderId = "cmi";
+export type PaymentProviderId = "cmi" | "stripe" | "mock";
 
 export type PaymentMode = "test" | "live";
 

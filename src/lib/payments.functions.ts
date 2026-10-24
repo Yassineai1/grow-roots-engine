@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { PaymentConfigStatus, PaymentMode } from "@/lib/payments/types";
+import type { PaymentConfigStatus, PaymentMode, PaymentProviderId } from "@/lib/payments/types";
+import type { ProviderConfig } from "@/lib/payments/provider.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const HOLD_MINUTES = 15;
@@ -11,22 +12,36 @@ type SecretRow = {
   mode: PaymentMode;
   payment_configured: boolean;
   provider: string;
+  stripe_secret_key: string | null;
+  stripe_publishable_key: string | null;
+  stripe_webhook_secret: string | null;
 };
 
 /** Server-only: reads the private provider config. The store key never leaves this module. */
-async function loadConfig(businessId: string) {
+async function loadConfig(businessId: string): Promise<ProviderConfig> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.rpc("get_business_payment_secrets", {
     _business_id: businessId,
   });
   const row = (data as SecretRow[] | null)?.[0];
-  return {
-    provider: (row?.provider ?? "cmi") as "cmi",
-    merchantId: row?.merchant_id ?? null,
-    storeKey: row?.store_key ?? null,
-    mode: (row?.mode ?? "test") as PaymentMode,
-    configured: row?.payment_configured ?? false,
-  };
+
+  const provider = (row?.provider ?? "cmi") as PaymentProviderId;
+  const mode = (row?.mode ?? "test") as PaymentMode;
+  const configured = row?.payment_configured ?? false;
+
+  const credentials: ProviderConfig["credentials"] = {};
+  if (row?.merchant_id && row?.store_key) {
+    credentials.cmi = { merchantId: row.merchant_id, storeKey: row.store_key };
+  }
+  if (row?.stripe_secret_key && row?.stripe_publishable_key) {
+    credentials.stripe = {
+      secretKey: row.stripe_secret_key,
+      publishableKey: row.stripe_publishable_key,
+      webhookSecret: row.stripe_webhook_secret,
+    };
+  }
+
+  return { provider, mode, configured, credentials };
 }
 
 async function assertOwner(supabase: SupabaseClient, businessId: string) {
@@ -42,14 +57,19 @@ export const getPaymentSettings = createServerFn({ method: "POST" })
     await assertOwner(context.supabase, data.businessId);
     const cfg = await loadConfig(data.businessId);
     const status: PaymentConfigStatus = !cfg.configured ? "not_configured" : cfg.mode;
+    const cmi = cfg.credentials.cmi;
+    const stripe = cfg.credentials.stripe;
     return {
       provider: cfg.provider,
       status,
       mode: cfg.mode,
-      merchantIdMasked: cfg.merchantId
-        ? `${"*".repeat(Math.max(cfg.merchantId.length - 4, 0))}${cfg.merchantId.slice(-4)}`
+      merchantIdMasked: cmi?.merchantId
+        ? `${"*".repeat(Math.max(cmi.merchantId.length - 4, 0))}${cmi.merchantId.slice(-4)}`
         : null,
-      storeKeySet: !!cfg.storeKey,
+      storeKeySet: !!cmi?.storeKey,
+      stripeSecretKeySet: !!stripe?.secretKey,
+      stripePublishableKey: stripe?.publishableKey ?? null,
+      stripeWebhookSecretSet: !!stripe?.webhookSecret,
     };
   });
 
@@ -393,5 +413,33 @@ export const cancelBookingCheckout = createServerFn({ method: "POST" })
         .eq("id", payment.booking_id)
         .eq("status", "pending");
     }
+    return { ok: true };
+  });
+
+/** Owner saves Stripe credentials. */
+export const saveStripeSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { 
+    businessId: string; 
+    secretKey: string; 
+    publishableKey: string; 
+    webhookSecret: string; 
+    mode: PaymentMode 
+  }) => d)
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, data.businessId);
+    if (data.mode !== "test" && data.mode !== "live") throw new Error("Invalid mode.");
+    
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    const { error } = await supabaseAdmin.rpc("set_business_stripe_config" as any, {
+      _business_id: data.businessId,
+      _secret_key: data.secretKey.trim(),
+      _publishable_key: data.publishableKey.trim(),
+      _webhook_secret: data.webhookSecret.trim(),
+      _mode: data.mode,
+    });
+    
+    if (error) throw new Error(error.message);
     return { ok: true };
   });

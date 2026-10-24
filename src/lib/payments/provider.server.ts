@@ -1,20 +1,26 @@
 // Server-only payment provider layer.
-//
-// The rest of the application talks to a `PaymentProvider` through generic
-// concepts (amount, currency, provider payment id, status). Provider specific
-// logic — currently only CMI — is isolated in this file so that other
-// providers (Payzone, Stripe, ...) can be added later without touching the
-// booking system.
-
 import type { PaymentMode, PaymentProviderId } from "./types";
+import Stripe from "stripe";
 
-/** Per-business provider credentials. Never leaves the server. */
+export type CmiCredentials = {
+  merchantId: string;
+  storeKey: string;
+};
+
+export type StripeCredentials = {
+  secretKey: string;
+  publishableKey: string;
+  webhookSecret: string | null;
+};
+
 export type ProviderConfig = {
   provider: PaymentProviderId;
-  merchantId: string | null;
-  storeKey: string | null;
   mode: PaymentMode;
   configured: boolean;
+  credentials: {
+    cmi?: CmiCredentials;
+    stripe?: StripeCredentials;
+  };
 };
 
 export type CheckoutIntent = {
@@ -25,10 +31,9 @@ export type CheckoutIntent = {
 };
 
 export type CheckoutSession = {
-  /** "mock" renders the simulated checkout UI; "redirect" hands off to the provider. */
   kind: "mock" | "redirect";
   providerPaymentId: string;
-  redirectUrl?: string;
+  redirectUrl?: string | undefined; // زدنا undefined باش نحلو مشكل TypeScript
 };
 
 export interface PaymentProvider {
@@ -36,15 +41,6 @@ export interface PaymentProvider {
   createCheckout(intent: CheckoutIntent, config: ProviderConfig): Promise<CheckoutSession>;
 }
 
-/**
- * MOCK ONLY — replace this provider implementation with the official CMI signed
- * request/redirect and server-side verification flow when real merchant
- * credentials are available.
- *
- * It performs no network call and invents no CMI endpoint, parameter or
- * signature. It only produces a local reference so the application can walk
- * through the same state transitions the real provider will eventually drive.
- */
 export function mockCmiCheckout(intent: CheckoutIntent, config: ProviderConfig): CheckoutSession {
   if (config.mode !== "test") {
     throw new Error("Simulated payments are only available in test mode.");
@@ -55,19 +51,73 @@ export function mockCmiCheckout(intent: CheckoutIntent, config: ProviderConfig):
 const cmiProvider: PaymentProvider = {
   id: "cmi",
   async createCheckout(intent, config) {
-    if (!config.configured) {
-      throw new Error("Payment provider is not configured for this business.");
+    if (!config.configured || !config.credentials.cmi) {
+      throw new Error("CMI is not configured for this business.");
     }
     if (config.mode === "live") {
-      // Real CMI integration is intentionally not implemented: it requires the
-      // official CMI merchant documentation and real credentials.
       throw new Error("Live CMI payments are not available yet.");
     }
     return mockCmiCheckout(intent, config);
   },
 };
 
-const providers: Record<PaymentProviderId, PaymentProvider> = { cmi: cmiProvider };
+const stripeProvider: PaymentProvider = {
+  id: "stripe",
+  async createCheckout(intent, config) {
+    if (!config.configured || !config.credentials.stripe) {
+      throw new Error("Stripe is not configured for this business.");
+    }
+
+    const stripe = new Stripe(config.credentials.stripe.secretKey);
+
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: intent.currency.toLowerCase(),
+            product_data: {
+              name: intent.description,
+            },
+            unit_amount: Math.round(intent.amount * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      metadata: {
+        paymentId: intent.paymentId,
+      },
+      // استعملنا ['VITE_APP_URL'] باش نحلو مشكل process.env
+      success_url: `${process.env['VITE_APP_URL'] || 'http://localhost:5173'}/my-bookings?payment_success=true`,
+      cancel_url: `${process.env['VITE_APP_URL'] || 'http://localhost:5173'}/my-bookings?payment_cancelled=true`,
+    });
+
+    return {
+      kind: "redirect",
+      providerPaymentId: session.id,
+      redirectUrl: session.url || undefined,
+    };
+  },
+};
+
+const mockProvider: PaymentProvider = {
+  id: "mock",
+  async createCheckout(intent, config) {
+    if (config.mode !== "test") {
+      throw new Error("Mock provider only works in test mode.");
+    }
+    return {
+      kind: "mock",
+      providerPaymentId: `mock_${intent.paymentId}`,
+    };
+  },
+};
+
+const providers: Record<PaymentProviderId, PaymentProvider> = {
+  cmi: cmiProvider,
+  stripe: stripeProvider,
+  mock: mockProvider,
+};
 
 export function getPaymentProvider(id: string): PaymentProvider {
   const provider = providers[id as PaymentProviderId];

@@ -38,7 +38,7 @@ function ForgotPasswordPage() {
     // Always show the same message so no one can probe which emails exist.
     await supabase.auth
       .resetPasswordForEmail(value, {
-        // Same-origin URL: works in the Lovable preview and on the published site.
+        // Same-origin URL: works in local development and production.
         redirectTo: `${window.location.origin}/reset-password`,
       })
       .catch(() => undefined);

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/hooks/booking-reminders")({
 
         try {
           const result = await runBookingReminders();
-          return Response.json({ ok: true, ...result });
+          return Response.json({ ok: true, ...(result as any) });
         } catch {
           return Response.json(
             { ok: false, error: "Failed to process booking reminders" },
