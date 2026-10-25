@@ -1,18 +1,16 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   startBookingCheckout,
   resolveMockPayment,
-  retryBookingPayment,
   cancelBookingCheckout,
 } from "@/lib/payments.functions";
-import { dispatchBookingNotifications } from "@/lib/notifications.functions";
-import { getBrandingImageUrls } from "@/lib/branding.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/payments/types";
-import { cn } from "@/lib/utils";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 
 export const Route = createFileRoute("/book/$slug")({
   component: PublicBookingPage,
@@ -40,304 +38,307 @@ function PublicBookingPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
 
+  const [business, setBusiness] = useState<any>(null);
+  const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<{
-    service: string;
-    staff: string;
-    date: string;
-    time: string;
-    status: string;
-  } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [checkout, setCheckout] = useState<{
-    paymentId: string;
-    bookingId: string;
-    amount: number;
-    currency: string;
-    mode: string;
-    service: string;
-    staff: string;
-    date: string;
-    time: string;
-    serviceId: string;
-    staffId: string;
-    startTime: string;
-    endTime: string;
-  } | null>(null);
-  const [payFailed, setPayFailed] = useState(false);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<any | null>(null);
   
-  const bookingRef = useRef<HTMLDivElement | null>(null);
-  const servicesRef = useRef<HTMLDivElement | null>(null);
-  const contactRef = useRef<HTMLDivElement | null>(null);
-  const pickerRef = useRef<HTMLElement | null>(null);
-
-  const [selectedSlot, setSelectedSlot] = useState<{
-    staffId: string;
-    staffName: string;
-    startTime: string;
-    endTime: string;
-  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [checkout, setCheckout] = useState<any | null>(null);
+  const [confirmation, setConfirmation] = useState<any | null>(null);
 
   const startCheckout = useServerFn(startBookingCheckout);
   const resolvePayment = useServerFn(resolveMockPayment);
-  const retryPayment = useServerFn(retryBookingPayment);
   const cancelCheckout = useServerFn(cancelBookingCheckout);
-  const dispatchEmails = useServerFn(dispatchBookingNotifications);
 
-  const { data: business } = useQuery({
-    queryKey: ["public-business", slug],
-    queryFn: async () => {
-      const { data, error: e } = await supabase.rpc("get_public_business", { _slug: slug });
-      if (e) throw e;
-      return data?.[0] ?? null;
-    },
-  });
+  // 1. Fetch Business & Services
+  useEffect(() => {
+    async function loadData() {
+      const { data: bData } = await supabase.rpc("get_public_business", { _slug: slug });
+      if (!bData || bData.length === 0) { setIsLoading(false); return; }
+      const biz = bData[0] as any;
+      setBusiness(biz);
 
-  const brandingImages = useServerFn(getBrandingImageUrls);
-  const { data: images } = useQuery({
-    queryKey: ["public-branding-images", slug],
-    queryFn: () => brandingImages({ data: { slug } }),
-  });
+      const { data: sData } = await supabase.rpc("get_public_services", { _business_id: biz.id });
+      setServices(sData || []);
+      setIsLoading(false);
+    }
+    loadData();
+  }, [slug]);
 
-  const { data: services } = useQuery({
-    queryKey: ["public-services", business?.id],
-    enabled: !!business?.id,
-    queryFn: async () => {
-      const { data, error: e } = await supabase.rpc("get_public_services", {
-        _business_id: business!.id,
+  // 2. Fetch Available Days when service changes
+  useEffect(() => {
+    async function fetchDays() {
+      if (!selectedService) return;
+      setAvailableDays([]);
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      const end = new Date(today.getFullYear(), today.getMonth() + 2, 0).toISOString().split('T')[0];
+      
+      const { data } = await supabase.rpc("get_available_days" as any, {
+        _service_id: selectedService,
+        _month_start: start,
+        _month_end: end
       });
-      if (e) throw e;
-      return data ?? [];
-    },
-  });
+      if (data) setAvailableDays(data.map((d: any) => d.available_date));
+    }
+    fetchDays();
+  }, [selectedService]);
 
-  // Removed unused variables to fix TS errors
-  const scrollTo = (ref: React.RefObject<HTMLDivElement | HTMLElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // 3. Fetch Slots when date changes
+  useEffect(() => {
+    async function fetchSlots() {
+      if (!selectedService || !selectedDate) return;
+      setIsLoadingSlots(true);
+      setAvailableSlots([]);
+      setSelectedSlot(null);
+      
+      const { data, error } = await supabase.rpc("get_available_slots", {
+        _service_id: selectedService,
+        _date: selectedDate
+      });
+      if (!error && data) setAvailableSlots(data);
+      setIsLoadingSlots(false);
+    }
+    fetchSlots();
+  }, [selectedService, selectedDate]);
+
+  // 4. Handle Booking
+  async function handleBook() {
+    if (!selectedService || !selectedSlot || !selectedDate || !business) return;
+    const currentBusiness = business; // TS narrow
+    setBusy(true);
+    setError(null);
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+          serviceId: selectedService, staffId: selectedSlot.staff_id,
+          date: selectedDate, startTime: selectedSlot.start_time, endTime: selectedSlot.end_time
+        }));
+        navigate({ to: "/login", search: { redirect: `/book/${slug}` } });
+        return;
+      }
+
+      const service = services.find(s => s.id === selectedService);
+      
+      if (service?.requires_payment) {
+        const res = await startCheckout({
+          data: {
+            businessId: currentBusiness.id, serviceId: selectedService, staffId: selectedSlot.staff_id,
+            date: selectedDate, startTime: selectedSlot.start_time, endTime: selectedSlot.end_time,
+          },
+        });
+        
+        if (res.status === "unavailable") {
+          setError("Online payment is not available. Please contact the business.");
+          return;
+        }
+        
+        setCheckout({
+          paymentId: res.paymentId, bookingId: res.bookingId, amount: res.amount, currency: res.currency,
+          mode: res.mode, service: service.name, staff: selectedSlot.staff_name,
+          date: selectedDate, time: `${formatLocalTime(selectedSlot.start_time, business.timezone)}–${formatLocalTime(selectedSlot.end_time, business.timezone)}`,
+          serviceId: selectedService, staffId: selectedSlot.staff_id, startTime: selectedSlot.start_time, endTime: selectedSlot.end_time,
+        });
+        return;
+      }
+
+      // Free Booking
+      await supabase.from("users").upsert({ id: userData.user.id, email: userData.user.email ?? "", full_name: "Client" }, { onConflict: "id", ignoreDuplicates: true });
+      
+      const { data: client } = await supabase.from("clients").select("id").eq("business_id", currentBusiness.id).eq("user_id", userData.user.id).maybeSingle();
+      let clientId = client?.id as string | undefined;
+      if (!clientId) {
+        const { data: newClient } = await supabase.from("clients").insert({ business_id: currentBusiness.id, user_id: userData.user.id }).select("id").single();
+        clientId = newClient?.id;
+      }
+
+      const { error: bookError } = await supabase.from("bookings").insert({
+        business_id: currentBusiness.id, client_id: clientId as string, service_id: selectedService, staff_id: selectedSlot.staff_id,
+        booking_date: selectedDate, start_time: selectedSlot.start_time, end_time: selectedSlot.end_time, status: 'confirmed'
+      });
+
+      if (bookError) throw bookError;
+
+      setConfirmation({
+        service: service?.name, staff: selectedSlot.staff_name, date: selectedDate,
+        time: `${formatLocalTime(selectedSlot.start_time, currentBusiness.timezone)}–${formatLocalTime(selectedSlot.end_time, currentBusiness.timezone)}`, status: "confirmed"
+      });
+      setSelectedService(null); setSelectedSlot(null); setSelectedDate("");
+
+    } catch (err: any) {
+      setError(err.message || "Failed to book.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (isLoading) return <div className="p-10 text-center text-foreground">Loading...</div>;
+  if (!business) return <div className="p-10 text-center text-destructive">Business not found.</div>;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {business && (
-        <section className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-            <div className="flex flex-col items-start gap-6">
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">{business.name}</h1>
-              <p className="max-w-xl text-base text-muted-foreground">{business.description || "Book your next session with us."}</p>
-              <button className="ui-btn mt-7" onClick={() => scrollTo(bookingRef)}>
-                Book a session
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-10">
+      <div className="max-w-3xl mx-auto space-y-8">
+        
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold">{business.name}</h1>
+          <p className="text-muted-foreground">{business.description || "Book your next session with us."}</p>
+        </div>
 
-      <div ref={bookingRef} />
-      <section ref={servicesRef} className="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
-        {checkout ? (
-          <div className="ui-card mx-auto mt-6 max-w-2xl p-6">
-            <h2 className="text-xl font-semibold text-foreground">Payment required</h2>
-            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-              <li>Service: {checkout.service}</li>
-              <li>Staff: {checkout.staff}</li>
-              <li>
-                Date: {checkout.date} · {checkout.time}
-              </li>
-              <li>Amount: {formatMoney(checkout.amount, checkout.currency)}</li>
-            </ul>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Your slot is held for 15 minutes while you complete payment.
-            </p>
-            {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+        {/* Success State */}
+        {confirmation && (
+          <div className="ui-card p-6 border-success text-center space-y-4">
+            <h2 className="text-2xl font-bold text-success">Booking Confirmed! 🎉</h2>
+            <p>{confirmation.service} with {confirmation.staff}</p>
+            <p className="font-mono">{confirmation.date} at {confirmation.time}</p>
+            <button onClick={() => setConfirmation(null)} className="ui-btn mt-4">Book another</button>
+          </div>
+        )}
+
+        {/* Checkout State */}
+        {checkout && !confirmation && (
+          <div className="ui-card p-6 space-y-4">
+            <h2 className="text-xl font-bold">Payment Required</h2>
+            <div className="text-sm space-y-1 text-muted-foreground">
+              <p>Service: {checkout.service}</p>
+              <p>Time: {checkout.date} at {checkout.time}</p>
+              <p className="text-lg font-bold text-foreground mt-2">{formatMoney(checkout.amount, checkout.currency)}</p>
+            </div>
             
             {checkout.mode === "test" ? (
-              <>
-                <p className="mt-4 text-xs text-warning">Test mode — no real money is taken.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    disabled={busy}
-                    className="ui-btn"
-                    onClick={async () => {
-                      setBusy(true);
-                      setError(null);
-                      try {
-                        const res = await resolvePayment({
-                          data: { paymentId: checkout.paymentId, outcome: "success" },
-                        });
-                        if (res.status === "paid") {
-                          setCheckout(null);
-                          setConfirmation({
-                            service: checkout.service,
-                            staff: checkout.staff,
-                            date: checkout.date,
-                            time: checkout.time,
-                            status: "confirmed · paid",
-                          });
-                        }
-                      } catch (e) {
-                        setError((e as Error).message);
-                      } finally {
-                        setBusy(false);
-                      }
-                    }}
-                  >
-                    Simulate successful payment
-                  </button>
-                  <button
-                    disabled={busy}
-                    className="ui-btn-secondary"
-                    onClick={async () => {
-                      setBusy(true);
-                      setError(null);
-                      try {
-                        await resolvePayment({
-                          data: { paymentId: checkout.paymentId, outcome: "failure" },
-                        });
-                        setPayFailed(true);
-                        setError("Payment failed. Your booking is not confirmed.");
-                      } catch (e) {
-                        setError((e as Error).message);
-                      } finally {
-                        setBusy(false);
-                      }
-                    }}
-                  >
-                    Simulate failed payment
-                  </button>
-                  {payFailed && (
-                    <button
-                      disabled={busy}
-                      className="ui-btn"
-                      onClick={async () => {
-                        setBusy(true);
-                        setError(null);
-                        try {
-                          const res = await retryPayment({
-                            data: { bookingId: checkout.bookingId },
-                          });
-                          if (res.status === "checkout") {
-                            setCheckout({ ...checkout, paymentId: res.paymentId });
-                            setPayFailed(false);
-                          }
-                        } catch (e) {
-                          setError((e as Error).message);
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                    >
-                      Retry payment
-                    </button>
-                  )}
-                  <button
-                    disabled={busy}
-                    className="ui-btn-secondary"
-                    onClick={async () => {
-                      setBusy(true);
-                      try {
-                        await cancelCheckout({ data: { paymentId: checkout.paymentId } });
-                      } finally {
-                        setCheckout(null);
-                        setPayFailed(false);
-                        setBusy(false);
-                      }
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="mt-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  You will be redirected to Stripe to complete your payment securely.
-                </p>
-                <button
-                  disabled={busy}
-                  className="ui-btn"
+              <div className="space-y-3 pt-4 border-t border-border">
+                <p className="text-xs text-warning">Test Mode: Click below to simulate payment.</p>
+                <button 
                   onClick={async () => {
                     setBusy(true);
-                    setError(null);
-                    try {
-                      const res = await startCheckout({
-                        data: {
-                          businessId: business!.id,
-                          serviceId: checkout.serviceId,
-                          staffId: checkout.staffId,
-                          date: checkout.date,
-                          startTime: checkout.startTime,
-                          endTime: checkout.endTime,
-                        },
-                      });
-                      if (res.status === "checkout" && res.redirectUrl) {
-                        window.location.href = res.redirectUrl;
-                      } else {
-                        setError("Failed to create Stripe checkout session.");
-                      }
-                    } catch (e) {
-                      setError((e as Error).message);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
+                    await resolvePayment({ data: { paymentId: checkout.paymentId, outcome: "success" } });
+                    setCheckout(null);
+                    setConfirmation({ ...checkout, status: "paid" });
+                    setBusy(false);
+                  }} 
+                  disabled={busy} 
+                  className="ui-btn w-full"
+                >
+                  Simulate Successful Payment
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 pt-4 border-t border-border">
+                <p className="text-sm">You will be redirected to Stripe to pay securely.</p>
+                <button 
+                  onClick={async () => {
+                    setBusy(true);
+                    const res = await startCheckout({ data: { businessId: business.id, serviceId: checkout.serviceId, staffId: checkout.staffId, date: checkout.date, startTime: checkout.startTime, endTime: checkout.endTime } });
+                    if (res.status === "checkout" && res.redirectUrl) window.location.href = res.redirectUrl;
+                    setBusy(false);
+                  }} 
+                  disabled={busy} 
+                  className="ui-btn w-full"
                 >
                   Pay with Stripe
                 </button>
-                <button
-                  disabled={busy}
-                  className="ui-btn-secondary mt-2"
-                  onClick={async () => {
-                    setBusy(true);
-                    try {
-                      await cancelCheckout({ data: { paymentId: checkout.paymentId } });
-                    } finally {
-                      setCheckout(null);
-                      setPayFailed(false);
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  Cancel
+              </div>
+            )}
+            <button onClick={() => setCheckout(null)} className="ui-btn-secondary w-full mt-2">Cancel</button>
+          </div>
+        )}
+
+        {/* Booking Flow */}
+        {!confirmation && !checkout && (
+          <div className="space-y-8">
+            {/* Services */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">Select a Service</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {services.map(s => (
+                  <button 
+                    key={s.id} 
+                    onClick={() => { setSelectedService(s.id); setSelectedDate(""); setSelectedSlot(null); }}
+                    className={`ui-card p-4 text-left transition ${selectedService === s.id ? 'border-primary ring-1 ring-primary' : 'hover:border-primary/50'}`}
+                  >
+                    <div className="font-bold">{s.name}</div>
+                    <div className="text-sm text-muted-foreground">{s.duration_minutes} min</div>
+                    <div className="mt-2 font-mono">{formatMoney(s.price, "MAD")}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Calendar */}
+            {selectedService && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold">Select a Date</h2>
+                <div className="ui-card p-4 inline-block">
+                  <DayPicker
+                    mode="single"
+                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    onSelect={(d) => {
+                      if (d) {
+                        const offset = d.getTimezoneOffset();
+                        setSelectedDate(new Date(d.getTime() - (offset*60000)).toISOString().split('T')[0] as string);
+                      } else setSelectedDate("");
+                    }}
+                    disabled={[
+                      { before: new Date() },
+                      (d) => {
+                        const offset = d.getTimezoneOffset();
+                        const dateStr = new Date(d.getTime() - (offset*60000)).toISOString().split('T')[0] as string;
+                        return !availableDays.includes(dateStr);
+                      }
+                    ]}
+                    modifiersClassNames={{ selected: 'bg-primary text-primary-foreground font-bold rounded-md' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Slots */}
+            {selectedDate && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold">Select a Time</h2>
+                {isLoadingSlots ? (
+                  <p className="text-muted-foreground">Loading times...</p>
+                ) : availableSlots.length === 0 ? (
+                  <p className="text-muted-foreground">No times available on this date.</p>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                    {availableSlots.map((slot, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`ui-card p-3 text-center transition ${selectedSlot?.start_time === slot.start_time ? 'border-primary bg-primary/10' : 'hover:border-primary/50'}`}
+                      >
+                        <div className="font-bold">{slot.start_time.slice(0,5)}</div>
+                        <div className="text-xs text-muted-foreground">{slot.staff_name}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Confirm Button */}
+            {selectedSlot && (
+              <div className="pt-4 border-t border-border">
+                <button onClick={handleBook} disabled={busy} className="ui-btn w-full text-lg py-3">
+                  {busy ? "Processing..." : "Confirm Booking"}
                 </button>
+                {error && <p className="text-destructive text-sm mt-2 text-center">{error}</p>}
               </div>
             )}
           </div>
-        ) : confirmation ? (
-          <div className="ui-card mx-auto mt-6 max-w-2xl p-6">
-            <h2 className="text-xl font-semibold text-foreground">Booking requested</h2>
-            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-              <li>Business: {business?.name}</li>
-              <li>Service: {confirmation.service}</li>
-              <li>Staff: {confirmation.staff}</li>
-              <li>Date: {confirmation.date}</li>
-              <li>Time: {confirmation.time}</li>
-              <li>Status: {confirmation.status}</li>
-            </ul>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button onClick={() => setConfirmation(null)} className="ui-btn-secondary">
-                Book another
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-10">
-            <h2 className="text-2xl font-semibold tracking-tight">Services</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {services?.map((s) => (
-                <div key={s.id} className="ui-card p-5">
-                  <h3 className="font-medium">{s.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
-                  <p className="mt-2 text-sm font-medium">{formatMoney(s.price, "MAD")}</p>
-                  <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
-      </section>
+
+      </div>
     </div>
   );
 }
