@@ -127,6 +127,74 @@ function SettingsPage() {
               </form>
             </section>
 
+            
+            <section className="ui-card p-5 sm:p-6">
+              <h2 className="text-sm font-medium text-foreground">Branding & Identity</h2>
+              <p className="mt-1 text-sm text-muted-foreground mb-4">Upload your logo and a cover image for your public booking page.</p>
+              
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Logo</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center overflow-hidden border border-border">
+                      {business.logo_url ? (
+                        <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No logo</span>
+                      )}
+                    </div>
+                    <label className="ui-btn cursor-pointer">
+                      Upload
+                      <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${business.id}/logo-${Date.now()}.${fileExt}`;
+                        const { error } = await supabase.storage.from('business-branding').upload(fileName, file);
+                        if (!error) {
+                          const { data } = supabase.storage.from('business-branding').getPublicUrl(fileName);
+                          await supabase.from('businesses').update({ logo_url: data.publicUrl }).eq('id', business.id);
+                          queryClient.invalidateQueries({ queryKey: ["my-business"] });
+                        } else {
+                          alert("Upload failed: " + error.message);
+                        }
+                      }} />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Cover Image</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-24 rounded-md bg-secondary flex items-center justify-center overflow-hidden border border-border">
+                      {(business as any).cover_image_url ? (
+                        <img src={(business as any).cover_image_url} alt="Cover" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No cover</span>
+                      )}
+                    </div>
+                    <label className="ui-btn cursor-pointer">
+                      Upload
+                      <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${business.id}/cover-${Date.now()}.${fileExt}`;
+                        const { error } = await supabase.storage.from('business-branding').upload(fileName, file);
+                        if (!error) {
+                          const { data } = supabase.storage.from('business-branding').getPublicUrl(fileName);
+                          await supabase.from('businesses').update({ cover_image_url: data.publicUrl }).eq('id', business.id);
+                          queryClient.invalidateQueries({ queryKey: ["my-business"] });
+                        } else {
+                          alert("Upload failed: " + error.message);
+                        }
+                      }} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <PaymentSettings businessId={business.id} />
           </>
         )}
